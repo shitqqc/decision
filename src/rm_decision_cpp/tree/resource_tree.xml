@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="ResourceTree">
+    <ReactiveFallback name="ResourcePriorityRoot">
+
+      <!-- P0: 复活（最高优先级） -->
+      <ReactiveSequence name="ReviveBranch">
+        <CheckHealth threshold="0" mode="less" />
+        <ReactiveFallback>
+          <!-- 免费复活优先 -->
+          <Sequence name="FreeRevive">
+            <CheckCanFreeResurrect />
+            <RequestReviveAction revive_type="free" />
+          </Sequence>
+          <!-- 金币复活：在敌方半场或进攻战术 + 金币充足 -->
+          <!-- <Sequence name="InstantRevive">
+            <Fallback>
+              <CheckInZone zone_name="enemy_defense" />
+              <CheckTacticalModeCondition mode="attack" />
+            </Fallback>
+            <CheckCoinRemaining threshold="{instant_resurrect_cost}" mode="greater" />
+            <RequestReviveAction revive_type="instant" max_instant_revive_count="1" />
+          </Sequence> -->
+        </ReactiveFallback>
+      </ReactiveSequence>
+
+      <ReactiveSequence name="AttackFortTransformHealthExchangeBranch">
+        <CheckAttackFortHealthExchangeNeeded />
+        <CheckCoinRemaining threshold="100" mode="greater" />
+        <RequestRemoteHealthExchangeAction />
+      </ReactiveSequence>
+
+      <!-- <ReactiveSequence name="RemoteHealthExchangeBranch">
+        <CheckEngagedStatus expected="false" />
+        <CheckHealth threshold="30" mode="less" />
+        <CheckCoinRemaining threshold="100" mode="greater" />
+        <CheckRemoteExchangeCooldown cooldown_seconds="10.0"
+                                     exchange_count_key="remote_health_exchange_count" />
+        <RequestRemoteHealthExchangeAction />
+      </ReactiveSequence> -->
+
+      <!-- P1: 远程弹药兑换（交战中 + 弹药&lt;150 + 金币&gt;=150 + 6s冷却 + 有剩余次数） -->
+      <!-- <ReactiveSequence name="RemoteAmmoExchangeBranch">
+        <CheckEngagedStatus expected="true" />
+        <CheckAmmoLow ammo_threshold="50" />
+        <CheckCoinRemaining threshold="100" mode="greater" />
+        <CheckRemainingAmmoExchange />
+        <CheckRemoteExchangeCooldown cooldown_seconds="8.0"
+                                     exchange_count_key="remote_ammo_exchange_count" />
+        <RequestRemoteAmmoExchangeAction />
+      </ReactiveSequence> -->
+
+      <!-- P2: 普通补给点弹药兑换（到家 + 弹药&lt;100 + 金币&gt;=100） -->
+      <ReactiveSequence name="NormalAmmoExchangeBranch">
+        <ReactiveFallback name="NormalAmmoExchangeConditions">
+          <CheckInZone zone_name="own_supply_zone" />
+          <CheckInZone zone_name="own_outpost_zone" />
+        </ReactiveFallback>
+        <CheckAmmoLow ammo_threshold="150" />
+        <CheckCoinRemaining threshold="100" mode="greater" />
+        <CheckNormalExchangeCooldown cooldown_seconds="5.0" />
+        <AccumulateAmmoPurchase step="50" />
+      </ReactiveSequence>
+
+    </ReactiveFallback>
+  </BehaviorTree>
+</root>

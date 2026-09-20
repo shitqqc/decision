@@ -5,106 +5,90 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(auto_aim_interfaces REQUIRED)
-find_package(rm_interfaces REQUIRED)
-find_package(rclcpp_components REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(decision_interfaces REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(nav2_msgs REQUIRED)
-find_package(nav2_util REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(tf2 REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(visualization_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(pcl_conversions REQUIRED)
-find_package(pcl_ros REQUIRED)
-find_package(PCL REQUIRED)
-
+find_package(action_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 include_directories(include)
 
 set(ros_dependencies
+  ament_index_cpp
   rclcpp
-  auto_aim_interfaces
-  rm_interfaces
+  rclcpp_action
+  decision_interfaces
   nav_msgs
   nav2_msgs
-  nav2_util
   geometry_msgs
   behaviortree_cpp
-  rclcpp_components
-  sensor_msgs
   std_msgs
+  action_msgs
   tf2
-  tf2_ros
-  tf2_geometry_msgs
-  visualization_msgs
-  pcl_conversions
-  pcl_ros
-  PCL
 )
 
-add_library(${PROJECT_NAME} SHARED
-  src/custume_types.cpp
-  src/behaviors/attack.cpp
-  src/behaviors/nav2pose.cpp
-  src/behaviors/anti_autoaim.cpp
-  src/behaviors/spin.cpp
-  src/behaviors/topics2blackboard.cpp
-  src/behaviors/sentry_cmd.cpp
-  src/behaviors/control_gimbal.cpp
-  src/behaviors/align_chassis.cpp
-  src/behaviors/chassis_type.cpp
-  src/behaviors/is_in_position.cpp
-  src/behaviors/yaw_turn_for_best_camera.cpp
+set(DECISION_SOURCES
+  src/infrastructure/game_info_referee_ingress.cpp
+  src/infrastructure/odom_pose_ingress.cpp
+  src/infrastructure/sentry_cmd_egress.cpp
+  src/infrastructure/bt_snapshot_publisher.cpp
+  src/infrastructure/bt_status_latch.cpp
+  src/application/bt_engine.cpp
+  src/application/decision_app.cpp
+  src/domain/zone_loader.cpp
+  src/bt/action/auto_actions.cpp
+  src/bt/action/nav_action.cpp
+  src/bt/action/tactical_action.cpp
+  src/bt/action/resource_actions.cpp
+  src/bt/action/change_stance_action.cpp
+  src/bt/action/gimbal_action.cpp
+  src/bt/action/recovery_actions.cpp
+  src/bt/condition/auto_conditions.cpp
+  src/bt/condition/tactical_condition.cpp
+  src/bt/condition/resource_conditions.cpp
+  src/bt/condition/change_stance_condition.cpp
+  src/bt/condition/gimbal_condition.cpp
 )
 
+add_library(${PROJECT_NAME} SHARED ${DECISION_SOURCES})
 target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-
 ament_target_dependencies(${PROJECT_NAME} ${ros_dependencies})
+target_link_libraries(${PROJECT_NAME} yaml-cpp)
 
-add_executable(tree_exec_node src/tree_exec_node.cpp
-  src/custume_types.cpp
-  src/behaviors/attack.cpp
-  src/behaviors/nav2pose.cpp
-  src/behaviors/anti_autoaim.cpp
-  src/behaviors/spin.cpp
-  src/behaviors/topics2blackboard.cpp
-  src/behaviors/sentry_cmd.cpp
-  src/behaviors/control_gimbal.cpp
-  src/behaviors/align_chassis.cpp
-  src/behaviors/chassis_type.cpp
-  src/behaviors/is_in_position.cpp
-  src/behaviors/yaw_turn_for_best_camera.cpp
-)
-ament_target_dependencies(tree_exec_node ${ros_dependencies})
+add_executable(tree_exec_node src/tree_exec_node.cpp)
 target_link_libraries(tree_exec_node ${PROJECT_NAME})
+ament_target_dependencies(tree_exec_node ${ros_dependencies})
 
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS ${PROJECT_NAME} tree_exec_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-install(TARGETS tree_exec_node
+install(DIRECTORY include/ DESTINATION include)
+install(DIRECTORY tree config launch web DESTINATION share/${PROJECT_NAME})
+install(PROGRAMS
+  scripts/bt_monitor_web.py
+  scripts/mock_decision_pub.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(DIRECTORY launch config
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(DIRECTORY include/
-  DESTINATION include
-)
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  set(ament_cmake_copyright_FOUND TRUE)
+  set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
 
 ament_package()

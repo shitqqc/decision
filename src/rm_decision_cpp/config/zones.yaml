@@ -1,0 +1,23 @@
+# RMUC defaults aligned with navi_minco_bit area.hpp (P0 + extended zone names).
+nav_points:
+  - {x: 3.0, y: 2.6, yaw: 0.0}     # 0 HOME
+  - {x: 12.8, y: 5.5, yaw: 0.0}    # 1 BONUS
+  - {x: 15.2, y: 11.2, yaw: 0.0}   # 2 ENEMY_OUTPOST
+  - {x: 7.2, y: 7.5, yaw: 0.0}     # 3 OWN_FORT
+  - {x: 22.0, y: 7.5, yaw: 0.0}    # 4 ENEMY_FORT
+  - {x: 12.1, y: 3.9, yaw: 0.0}    # 5 OWN_OUTPOST
+  - {x: 8.8, y: 13.6, yaw: 0.0}    # 6 HERO_GUARD
+
+rects:
+  - {name: own_supply, min_x: 1.5, max_x: 3.8, min_y: 0.0, max_y: 4.4}
+  - {name: own_outpost, min_x: 11.1, max_x: 12.4, min_y: 2.5, max_y: 4.5}
+  - {name: own_supply_zone, min_x: 1.5, max_x: 3.8, min_y: 0.0, max_y: 4.4}
+  - {name: own_outpost_zone, min_x: 11.1, max_x: 12.4, min_y: 2.5, max_y: 4.5}
+  - {name: highland, min_x: 6.0, max_x: 10.0, min_y: 10.0, max_y: 14.0}
+  - {name: own_defense, min_x: 0.0, max_x: 6.0, min_y: 0.0, max_y: 8.0}
+  - {name: enemy_defense, min_x: 18.0, max_x: 28.0, min_y: 4.0, max_y: 12.0}
+  - {name: stairs, min_x: 7.5, max_x: 10.0, min_y: 12.0, max_y: 14.5}
+
+circles:
+  - {name: enemy_fort, cx: 22.0, cy: 7.5, radius: 1.0}
+  - {name: enemy_fort_zone, cx: 22.0, cy: 7.5, radius: 1.0}

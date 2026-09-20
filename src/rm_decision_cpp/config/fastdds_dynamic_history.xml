@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dds>
+  <profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+    <!--
+      Default subscriber profile: use DYNAMIC history so reader history
+      can accept payloads larger than the first received sample (avoids
+      "Change payload size of '24' bytes is larger than the history
+      payload size of '23' bytes and cannot be resized" when message
+      ABI differs slightly between publisher and subscriber).
+      Use with: export FASTRTPS_DEFAULT_PROFILES_FILE=<path-to-this-file>
+               export RMW_FASTRTPS_USE_QOS_FROM_XML=1
+    -->
+    <subscriber profile_name="default_subscriber" is_default_profile="true">
+      <historyMemoryPolicy>DYNAMIC</historyMemoryPolicy>
+    </subscriber>
+    <publisher profile_name="default_publisher" is_default_profile="true">
+      <historyMemoryPolicy>DYNAMIC</historyMemoryPolicy>
+    </publisher>
+  </profiles>
+</dds>

@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BT Monitor</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a222c;
+      --border: #2c3845;
+      --text: #e7ecf1;
+      --muted: #8b9aab;
+      --idle: #6b7c8f;
+      --running: #3b82f6;
+      --success: #22c55e;
+      --failure: #ef4444;
+      --skipped: #a78bfa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Noto Sans SC", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 1.05rem; font-weight: 600; margin: 0; }
+    .meta { color: var(--muted); font-size: 0.85rem; }
+    .tabs { display: flex; gap: 0.35rem; margin-left: auto; }
+    .tabs button {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.3rem 0.7rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font: inherit;
+    }
+    .tabs button.active {
+      color: var(--text);
+      border-color: var(--running);
+      background: rgba(59, 130, 246, 0.15);
+    }
+    .layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.85fr) minmax(240px, 0.85fr);
+      min-height: 0;
+    }
+    .panel {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .panel:last-child { border-right: none; }
+    .panel-head {
+      padding: 0.55rem 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-head h2 {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .hint { color: var(--muted); font-size: 0.72rem; }
+    .zoom-btns { margin-left: auto; display: flex; gap: 0.3rem; }
+    .zoom-btns button {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      min-width: 28px;
+      height: 28px;
+      padding: 0 0.4rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.8rem;
+    }
+    .canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      cursor: grab;
+      background:
+        radial-gradient(circle at 1px 1px, #243041 1px, transparent 0) 0 0 / 18px 18px;
+    }
+    .canvas-wrap.panning { cursor: grabbing; }
+    .canvas-wrap.dragging-node { cursor: grabbing; }
+    .canvas-wrap.selecting { cursor: crosshair; }
+    #graphSvg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+    #marquee {
+      display: none;
+      position: absolute;
+      border: 1px dashed #60a5fa;
+      background: rgba(59, 130, 246, 0.12);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .bb-body { padding: 0.75rem; overflow: auto; flex: 1; }
+    .bb-filter {
+      width: 100%;
+      margin-bottom: 0.65rem;
+      padding: 0.4rem 0.55rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td {
+      text-align: left;
+      padding: 0.3rem 0.45rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 500; }
+    td.key {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      color: #93c5fd;
+      white-space: nowrap;
+    }
+    td.val {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      word-break: break-all;
+    }
+    .empty { color: var(--muted); padding: 1.5rem 0.5rem; }
+    .legend {
+      display: flex;
+      gap: 0.7rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      margin-right: 0.28rem;
+    }
+    .legend .r::before { background: var(--running); }
+    .legend .s::before { background: var(--success); }
+    .legend .f::before { background: var(--failure); }
+    .legend .i::before { background: var(--idle); }
+    .detail {
+      margin: 0.65rem 0.75rem 0;
+      padding: 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      font-size: 0.78rem;
+      display: none;
+    }
+    .detail.show { display: block; }
+    .detail h3 { margin: 0 0 0.35rem; font-size: 0.88rem; }
+    .detail pre {
+      margin: 0.3rem 0 0;
+      white-space: pre-wrap;
+      color: var(--muted);
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 0.72rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>BT Monitor</h1>
+    <div class="meta" id="meta">等待快照…</div>
+    <div class="legend">
+      <span class="r">RUNNING</span>
+      <span class="s">SUCCESS</span>
+      <span class="f">FAILURE</span>
+      <span class="i">IDLE</span>
+    </div>
+    <div class="tabs" id="tabs"></div>
+  </header>
+  <div class="layout">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>行为树</h2>
+        <span class="hint">左键框选节点，右键拖动画布，滚轮缩放，编辑布局可保存</span>
+        <div class="zoom-btns">
+          <button type="button" id="zoomOut" title="缩小">−</button>
+          <button type="button" id="zoomFit" title="适应并居中">画布居中</button>
+          <button type="button" id="zoomIn" title="放大">+</button>
+          <button type="button" id="layoutReset" title="自动布局">重置</button>
+          <button type="button" id="layoutSave" title="保存当前布局">保存</button>
+        </div>
+      </div>
+      <div class="canvas-wrap" id="canvasWrap">
+        <div id="marquee"></div>
+        <svg id="graphSvg" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrowIdle" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#6b7c8f"></path>
+            </marker>
+            <marker id="arrowRunning" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#3b82f6"></path>
+            </marker>
+            <marker id="arrowSuccess" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#22c55e"></path>
+            </marker>
+            <marker id="arrowFailure" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#ef4444"></path>
+            </marker>
+            <marker id="arrowSkipped" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#a78bfa"></path>
+            </marker>
+          </defs>
+          <g id="viewport"></g>
+        </svg>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h2>黑板 / 节点</h2></div>
+      <div class="detail" id="nodeDetail"></div>
+      <div class="bb-body">
+        <input class="bb-filter" id="bbFilter" placeholder="过滤键名…" />
+        <div id="bbRoot" class="empty">无数据</div>
+      </div>
+    </section>
+  </div>
+  <script>
+    const TREE_ORDER = ["resource", "tactical", "nav", "stance", "gimbal"];
+    const BOX_W = 150;
+    const BOX_H = 56;
+    const H_GAP = 36;
+    const V_GAP = 28;
+    const PAD = 32;
+    const EDGE_STUB = 14;
+    const LAYOUT_LS_KEY = "bt_monitor_layouts_v4";
+    const LAYOUT_VERSION = 4;
+
+    const statusColor = {
+      IDLE: "#6b7c8f",
+      RUNNING: "#3b82f6",
+      SUCCESS: "#22c55e",
+      FAILURE: "#ef4444",
+      SKIPPED: "#a78bfa",
+      UNKNOWN: "#6b7c8f",
+    };
+
+    let activeTree = "nav";
+    let latest = null;
+    let selectedUid = null;
+    let selectedUids = new Set();
+    let spaceDown = false;
+    /** @type {Record<string, {structureKey:string, positions:Object, panX:number, panY:number, scale:number}>} */
+    let savedLayouts = {};
+    let layoutHydrated = false;
+    let saveTimer = null;
+
+    // Per-tree view state
+    // { panX, panY, scale, positions: {uid:{x,y}}, structureKey, fitted }
+    const views = {};
+
+    const wrap = document.getElementById("canvasWrap");
+    const svg = document.getElementById("graphSvg");
+    const viewport = document.getElementById("viewport");
+
+    function view() {
+      if (!views[activeTree]) {
+        views[activeTree] = {
+          panX: 0,
+          panY: 0,
+          scale: 1,
+          positions: {},
+          structureKey: "",
+          fitted: false,
+        };
+      }
+      return views[activeTree];
+    }
+
+    function loadLayoutsFromLocal() {
+      try {
+        const raw = localStorage.getItem(LAYOUT_LS_KEY);
+        const data = raw ? JSON.parse(raw) : null;
+        if (data && data.layoutVersion === LAYOUT_VERSION) {
+          const { layoutVersion, ...trees } = data;
+          savedLayouts = trees;
+        } else {
+          savedLayouts = {};
+        }
+      } catch (_) {
+        savedLayouts = {};
+      }
+    }
+
+    async function hydrateLayouts() {
+      loadLayoutsFromLocal();
+      try {
+        const r = await fetch("/api/layout");
+        if (r.ok) {
+          const data = await r.json();
+          if (data && typeof data === "object" && data.layoutVersion === LAYOUT_VERSION) {
+            const { layoutVersion, ...trees } = data;
+            savedLayouts = Object.assign({}, savedLayouts, trees);
+          }
+        }
+      } catch (_) {}
+      layoutHydrated = true;
+    }
+
+    function serializeLayoutsPayload() {
+      const out = { layoutVersion: LAYOUT_VERSION };
+      TREE_ORDER.forEach((name) => {
+        const saved = savedLayouts[name];
+        if (saved && saved.structureKey && saved.positions) out[name] = saved;
+        const v = views[name];
+        if (!v || !v.structureKey || !Object.keys(v.positions || {}).length) return;
+        out[name] = {
+          structureKey: v.structureKey,
+          positions: v.positions,
+          panX: v.panX,
+          panY: v.panY,
+          scale: v.scale,
+        };
+      });
+      return out;
+    }
+
+    async function persistLayouts(showTip) {
+      const payload = serializeLayoutsPayload();
+      savedLayouts = payload;
+      try {
+        localStorage.setItem(LAYOUT_LS_KEY, JSON.stringify(payload));
+      } catch (_) {}
+      try {
+        await fetch("/api/layout", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (showTip) {
+          document.getElementById("meta").textContent = "布局已保存";
+        }
+      } catch (_) {
+        if (showTip) {
+          document.getElementById("meta").textContent = "布局已写入浏览器本地（服务端保存失败）";
+        }
+      }
+    }
+
+    function schedulePersist() {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => persistLayouts(false), 600);
+    }
+
+    function tryApplySavedLayout(v, key) {
+      const saved = savedLayouts[activeTree];
+      if (!saved || saved.structureKey !== key || !saved.positions) return false;
+      v.positions = JSON.parse(JSON.stringify(saved.positions));
+      v.structureKey = key;
+      if (typeof saved.panX === "number") v.panX = saved.panX;
+      if (typeof saved.panY === "number") v.panY = saved.panY;
+      if (typeof saved.scale === "number") v.scale = saved.scale;
+      v.fitted = true;
+      return true;
+    }
+
+    const tabsEl = document.getElementById("tabs");
+    TREE_ORDER.forEach((name) => {
+      const b = document.createElement("button");
+      b.textContent = name;
+      b.dataset.tree = name;
+      if (name === activeTree) b.classList.add("active");
+      b.onclick = () => {
+        activeTree = name;
+        selectedUid = null;
+        selectedUids = new Set();
+        [...tabsEl.children].forEach((c) =>
+          c.classList.toggle("active", c.dataset.tree === name)
+        );
+        renderDetail(null);
+        rebuildGraph(false);
+        applyViewportTransform();
+        if (!view().fitted) fitToView();
+      };
+      tabsEl.appendChild(b);
+    });
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function truncate(s, n) {
+      s = String(s || "");
+      return s.length > n ? s.slice(0, n - 1) + "…" : s;
+    }
+
+    function structureKey(root) {
+      const ids = [];
+      (function walk(n) {
+        if (!n) return;
+        ids.push(String(n.uid));
+        (n.children || []).forEach(walk);
+      })(root);
+      return ids.join(",");
+    }
+
+    /**
+     * Classic horizontal BT layout: parent left, children stacked on the right.
+     * Returns subtree AABB size.
+     */
+    function layoutTree(node, x, y, positions) {
+      const kids = node.children || [];
+      if (!kids.length) {
+        positions[node.uid] = { x, y };
+        return { h: BOX_H, w: BOX_W };
+      }
+
+      const childX = x + BOX_W + H_GAP;
+      let cursorY = y;
+      kids.forEach((child) => {
+        const sub = layoutTree(child, childX, cursorY, positions);
+        cursorY += sub.h + V_GAP;
+      });
+
+      const first = positions[kids[0].uid];
+      const last = positions[kids[kids.length - 1].uid];
+      positions[node.uid] = { x, y: (first.y + last.y) / 2 };
+
+      const b = boundsOf(positions, collectUids(node, []));
+      return { h: b.h, w: b.w };
+    }
+
+    function collectUids(node, out) {
+      out.push(String(node.uid));
+      (node.children || []).forEach((c) => collectUids(c, out));
+      return out;
+    }
+
+    function boundsOf(positions, uids) {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      const list = uids || Object.keys(positions);
+      list.forEach((uid) => {
+        const p = positions[uid];
+        if (!p) return;
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x + BOX_W);
+        maxY = Math.max(maxY, p.y + BOX_H);
+      });
+      if (!isFinite(minX)) return { minX: 0, minY: 0, maxX: BOX_W, maxY: BOX_H, w: BOX_W, h: BOX_H };
+      return { minX, minY, maxX, maxY, w: maxX - minX, h: maxY - minY };
+    }
+
+    function autoLayoutPositions(root) {
+      const positions = {};
+      const clone = JSON.parse(JSON.stringify(root));
+      layoutTree(clone, PAD, PAD, positions);
+      const b = boundsOf(positions);
+      // Normalize so content starts at PAD
+      const dx = PAD - b.minX;
+      const dy = PAD - b.minY;
+      if (dx || dy) {
+        Object.keys(positions).forEach((uid) => {
+          positions[uid].x += dx;
+          positions[uid].y += dy;
+        });
+      }
+      return positions;
+    }
+
+    /**
+     * Orthogonal edge: parent RIGHT → shared vertical bus (near parent) → child LEFT.
+     * Siblings share the same bus X and use distinct horizontal Y (= child mid),
+     * so edges form a clean trunk without crossing.
+     */
+    function arrowPath(px, py, cx, cy) {
+      const x1 = px + BOX_W;
+      const y1 = py + BOX_H / 2;
+      const x2 = cx;
+      const y2 = cy + BOX_H / 2;
+      const busX = x1 + EDGE_STUB;
+      if (x2 <= busX) {
+        const alt = Math.max(x1, x2) + EDGE_STUB;
+        return `M ${x1} ${y1} L ${alt} ${y1} L ${alt} ${y2} L ${x2} ${y2}`;
+      }
+      return `M ${x1} ${y1} L ${busX} ${y1} L ${busX} ${y2} L ${x2} ${y2}`;
+    }
+
+    function contentBounds(positions) {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      Object.values(positions).forEach((p) => {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x + BOX_W);
+        maxY = Math.max(maxY, p.y + BOX_H);
+      });
+      if (!isFinite(minX)) return { minX: 0, minY: 0, maxX: 100, maxY: 100, w: 100, h: 100 };
+      return { minX, minY, maxX, maxY, w: maxX - minX, h: maxY - minY };
+    }
+
+    function applyViewportTransform() {
+      const v = view();
+      viewport.setAttribute(
+        "transform",
+        `translate(${v.panX},${v.panY}) scale(${v.scale})`
+      );
+    }
+
+    function fitToView() {
+      const v = view();
+      const b = contentBounds(v.positions);
+      const rect = wrap.getBoundingClientRect();
+      const margin = 36;
+      const availW = Math.max(120, rect.width - margin * 2);
+      const availH = Math.max(120, rect.height - margin * 2);
+      const sx = availW / Math.max(b.w, 1);
+      const sy = availH / Math.max(b.h, 1);
+      v.scale = Math.max(0.25, Math.min(1.6, Math.min(sx, sy)));
+      const cx = (b.minX + b.maxX) / 2;
+      const cy = (b.minY + b.maxY) / 2;
+      v.panX = rect.width / 2 - cx * v.scale;
+      v.panY = rect.height / 2 - cy * v.scale;
+      v.fitted = true;
+      applyViewportTransform();
+    }
+
+    function zoomAt(factor, clientX, clientY) {
+      const v = view();
+      const rect = wrap.getBoundingClientRect();
+      const mx = clientX - rect.left;
+      const my = clientY - rect.top;
+      const worldX = (mx - v.panX) / v.scale;
+      const worldY = (my - v.panY) / v.scale;
+      const next = Math.max(0.2, Math.min(2.8, v.scale * factor));
+      v.panX = mx - worldX * next;
+      v.panY = my - worldY * next;
+      v.scale = next;
+      applyViewportTransform();
+    }
+
+    function edgeVisual(fromStatus, toStatus) {
+      const rank = { RUNNING: 4, FAILURE: 3, SUCCESS: 2, SKIPPED: 1, IDLE: 0, UNKNOWN: 0 };
+      const fs = fromStatus || "IDLE";
+      const ts = toStatus || "IDLE";
+      const pick = (rank[fs] || 0) >= (rank[ts] || 0) ? fs : ts;
+      const color = statusColor[pick] || statusColor.IDLE;
+      const marker =
+        pick === "RUNNING"
+          ? "url(#arrowRunning)"
+          : pick === "FAILURE"
+            ? "url(#arrowFailure)"
+            : pick === "SUCCESS"
+              ? "url(#arrowSuccess)"
+              : pick === "SKIPPED"
+                ? "url(#arrowSkipped)"
+                : "url(#arrowIdle)";
+      return {
+        color,
+        marker,
+        width: pick === "RUNNING" ? 2.4 : pick === "FAILURE" ? 2.0 : 1.45,
+      };
+    }
+
+    function isSelected(uid) {
+      return selectedUids.has(String(uid));
+    }
+
+    function setSelection(uids, focusUid) {
+      selectedUids = new Set((uids || []).map(String));
+      selectedUid = focusUid != null ? String(focusUid) : (uids[0] != null ? String(uids[0]) : null);
+    }
+
+    function collectFlat(root) {
+      const nodes = [];
+      const edges = [];
+      (function walk(n) {
+        if (!n) return;
+        nodes.push(n);
+        (n.children || []).forEach((c) => {
+          edges.push({ from: n.uid, to: c.uid, fromNode: n, toNode: c });
+          walk(c);
+        });
+      })(root);
+      return { nodes, edges };
+    }
+
+    function rebuildGraph(forceRelayout) {
+      const v = view();
+      viewport.innerHTML = "";
+      if (!latest || !latest.trees || !latest.trees[activeTree]) return;
+
+      const root = latest.trees[activeTree].root;
+      const key = structureKey(root);
+      if (forceRelayout) {
+        v.positions = autoLayoutPositions(root);
+        v.structureKey = key;
+        v.fitted = false;
+      } else if (v.structureKey !== key || !Object.keys(v.positions).length) {
+        if (!tryApplySavedLayout(v, key)) {
+          v.positions = autoLayoutPositions(root);
+          v.structureKey = key;
+          v.fitted = false;
+        }
+      } else {
+        const fresh = autoLayoutPositions(root);
+        Object.keys(fresh).forEach((uid) => {
+          if (!v.positions[uid]) v.positions[uid] = fresh[uid];
+        });
+        Object.keys(v.positions).forEach((uid) => {
+          if (!fresh[uid]) delete v.positions[uid];
+        });
+        v.structureKey = key;
+      }
+
+      const { nodes, edges } = collectFlat(root);
+      const edgeLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      edgeLayer.setAttribute("id", "edges");
+      const nodeLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      nodeLayer.setAttribute("id", "nodes");
+
+      edges.forEach((e) => {
+        const fp = v.positions[e.from];
+        const tp = v.positions[e.to];
+        if (!fp || !tp) return;
+        const vis = edgeVisual(e.fromNode.status, e.toNode.status);
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", arrowPath(fp.x, fp.y, tp.x, tp.y));
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", vis.color);
+        path.setAttribute("stroke-width", String(vis.width));
+        path.setAttribute("marker-end", vis.marker);
+        path.dataset.from = String(e.from);
+        path.dataset.to = String(e.to);
+        edgeLayer.appendChild(path);
+      });
+
+      nodes.forEach((n) => {
+        const p = v.positions[n.uid];
+        if (!p) return;
+        const st = n.status || "IDLE";
+        const color = statusColor[st] || statusColor.UNKNOWN;
+        const selected = isSelected(n.uid);
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        g.classList.add("bt-node");
+        g.dataset.uid = String(n.uid);
+        g.style.cursor = "grab";
+
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        rect.setAttribute("x", p.x);
+        rect.setAttribute("y", p.y);
+        rect.setAttribute("width", BOX_W);
+        rect.setAttribute("height", BOX_H);
+        rect.setAttribute("rx", "7");
+        rect.setAttribute("ry", "7");
+        rect.setAttribute("fill", selected ? "#2a3a4f" : "#232d3a");
+        rect.setAttribute("stroke", color);
+        rect.setAttribute("stroke-width", selected ? "3" : st === "RUNNING" ? "2.4" : "1.5");
+
+        const bar = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        bar.setAttribute("x", p.x);
+        bar.setAttribute("y", p.y);
+        bar.setAttribute("width", "5");
+        bar.setAttribute("height", BOX_H);
+        bar.setAttribute("rx", "2");
+        bar.setAttribute("fill", color);
+
+        const tName = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        tName.setAttribute("x", p.x + 12);
+        tName.setAttribute("y", p.y + 18);
+        tName.setAttribute("fill", "#e7ecf1");
+        tName.setAttribute("font-size", "12.5");
+        tName.setAttribute("font-weight", "600");
+        tName.textContent = truncate(n.name || "?", 15);
+
+        const tReg = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        tReg.setAttribute("x", p.x + 12);
+        tReg.setAttribute("y", p.y + 33);
+        tReg.setAttribute("fill", "#8b9aab");
+        tReg.setAttribute("font-size", "10.5");
+        tReg.textContent = truncate(n.registration || n.type || "", 17);
+
+        const tSt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        tSt.setAttribute("x", p.x + BOX_W - 7);
+        tSt.setAttribute("y", p.y + 16);
+        tSt.setAttribute("fill", color);
+        tSt.setAttribute("font-size", "9.5");
+        tSt.setAttribute("font-weight", "700");
+        tSt.setAttribute("text-anchor", "end");
+        tSt.textContent = st;
+
+        const ports = n.ports || {};
+        const portLine = Object.keys(ports)
+          .slice(0, 2)
+          .map((k) => k + "=" + ports[k])
+          .join(" ");
+        const tPorts = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        tPorts.setAttribute("x", p.x + 12);
+        tPorts.setAttribute("y", p.y + 47);
+        tPorts.setAttribute("fill", "#6b7c8f");
+        tPorts.setAttribute("font-size", "9.5");
+        tPorts.textContent = truncate(portLine, 20);
+
+        g.appendChild(rect);
+        g.appendChild(bar);
+        g.appendChild(tName);
+        g.appendChild(tReg);
+        g.appendChild(tSt);
+        g.appendChild(tPorts);
+        nodeLayer.appendChild(g);
+      });
+
+      viewport.appendChild(edgeLayer);
+      viewport.appendChild(nodeLayer);
+      applyViewportTransform();
+      if (!v.fitted) fitToView();
+    }
+
+    function updateStatusesOnly() {
+      // Fast path: same structure, refresh stroke/text without relayout
+      if (!latest || !latest.trees || !latest.trees[activeTree]) return;
+      const root = latest.trees[activeTree].root;
+      const v = view();
+      if (structureKey(root) !== v.structureKey) {
+        rebuildGraph(false);
+        return;
+      }
+      const byUid = {};
+      (function walk(n) {
+        byUid[n.uid] = n;
+        (n.children || []).forEach(walk);
+      })(root);
+
+      viewport.querySelectorAll(".bt-node").forEach((g) => {
+        const n = byUid[g.dataset.uid];
+        if (!n) return;
+        const st = n.status || "IDLE";
+        const color = statusColor[st] || statusColor.UNKNOWN;
+        const selected = isSelected(g.dataset.uid);
+        const rects = g.querySelectorAll("rect");
+        if (rects[0]) {
+          rects[0].setAttribute("fill", selected ? "#2a3a4f" : "#232d3a");
+          rects[0].setAttribute("stroke", color);
+          rects[0].setAttribute(
+            "stroke-width",
+            selected ? "3" : st === "RUNNING" ? "2.4" : "1.5"
+          );
+        }
+        if (rects[1]) rects[1].setAttribute("fill", color);
+        const texts = g.querySelectorAll("text");
+        if (texts[2]) {
+          texts[2].textContent = st;
+          texts[2].setAttribute("fill", color);
+        }
+      });
+
+      const { edges } = collectFlat(root);
+      const paths = viewport.querySelectorAll("#edges path");
+      paths.forEach((path) => {
+        const from = path.dataset.from;
+        const to = path.dataset.to;
+        const fn = byUid[from];
+        const tn = byUid[to];
+        const vis = edgeVisual(fn && fn.status, tn && tn.status);
+        path.setAttribute("stroke", vis.color);
+        path.setAttribute("stroke-width", String(vis.width));
+        path.setAttribute("marker-end", vis.marker);
+      });
+    }
+
+    function redrawEdges() {
+      const v = view();
+      if (!latest || !latest.trees || !latest.trees[activeTree]) return;
+      const { edges } = collectFlat(latest.trees[activeTree].root);
+      const edgeLayer = viewport.querySelector("#edges");
+      if (!edgeLayer) return;
+      edgeLayer.innerHTML = "";
+      edges.forEach((e) => {
+        const fp = v.positions[e.from];
+        const tp = v.positions[e.to];
+        if (!fp || !tp) return;
+        const vis = edgeVisual(e.fromNode.status, e.toNode.status);
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", arrowPath(fp.x, fp.y, tp.x, tp.y));
+        path.setAttribute("fill", "none");
+        path.setAttribute("stroke", vis.color);
+        path.setAttribute("stroke-width", String(vis.width));
+        path.setAttribute("marker-end", vis.marker);
+        path.dataset.from = String(e.from);
+        path.dataset.to = String(e.to);
+        edgeLayer.appendChild(path);
+      });
+    }
+
+    function moveNodeDom(uid, x, y) {
+      const g = viewport.querySelector(`.bt-node[data-uid="${uid}"]`);
+      if (!g) return;
+      const rects = g.querySelectorAll("rect");
+      if (rects[0]) {
+        rects[0].setAttribute("x", x);
+        rects[0].setAttribute("y", y);
+      }
+      if (rects[1]) {
+        rects[1].setAttribute("x", x);
+        rects[1].setAttribute("y", y);
+      }
+      const texts = g.querySelectorAll("text");
+      if (texts[0]) {
+        texts[0].setAttribute("x", x + 12);
+        texts[0].setAttribute("y", y + 18);
+      }
+      if (texts[1]) {
+        texts[1].setAttribute("x", x + 12);
+        texts[1].setAttribute("y", y + 33);
+      }
+      if (texts[2]) {
+        texts[2].setAttribute("x", x + BOX_W - 7);
+        texts[2].setAttribute("y", y + 16);
+      }
+      if (texts[3]) {
+        texts[3].setAttribute("x", x + 12);
+        texts[3].setAttribute("y", y + 47);
+      }
+    }
+
+    // --- pointer interactions ---
+    let mode = null; // pan | node | marquee
+    let dragUid = null;
+    let lastX = 0;
+    let lastY = 0;
+    let moved = false;
+    let worldGrabX = 0;
+    let worldGrabY = 0;
+    let groupOrigins = {};
+    let marqueeStart = null;
+    const marqueeEl = document.getElementById("marquee");
+
+    function clientToWorld(clientX, clientY) {
+      const v = view();
+      const rect = wrap.getBoundingClientRect();
+      return {
+        x: (clientX - rect.left - v.panX) / v.scale,
+        y: (clientY - rect.top - v.panY) / v.scale,
+      };
+    }
+
+    function showMarquee(x0, y0, x1, y1) {
+      const left = Math.min(x0, x1);
+      const top = Math.min(y0, y1);
+      marqueeEl.style.display = "block";
+      marqueeEl.style.left = left + "px";
+      marqueeEl.style.top = top + "px";
+      marqueeEl.style.width = Math.abs(x1 - x0) + "px";
+      marqueeEl.style.height = Math.abs(y1 - y0) + "px";
+    }
+
+    function hideMarquee() {
+      marqueeEl.style.display = "none";
+    }
+
+    function nodesInWorldRect(x0, y0, x1, y1) {
+      const minX = Math.min(x0, x1);
+      const maxX = Math.max(x0, x1);
+      const minY = Math.min(y0, y1);
+      const maxY = Math.max(y0, y1);
+      const hits = [];
+      Object.entries(view().positions).forEach(([uid, p]) => {
+        const nx1 = p.x + BOX_W;
+        const ny1 = p.y + BOX_H;
+        const overlap = !(nx1 < minX || p.x > maxX || ny1 < minY || p.y > maxY);
+        if (overlap) hits.push(uid);
+      });
+      return hits;
+    }
+
+    function applySelectionVisual() {
+      updateStatusesOnly();
+    }
+
+    wrap.addEventListener("pointerdown", (ev) => {
+      const panGesture = ev.button === 1 || ev.button === 2 || spaceDown || ev.altKey;
+      if (ev.button !== 0 && ev.button !== 1 && ev.button !== 2) return;
+      const nodeEl = ev.target.closest && ev.target.closest(".bt-node");
+      lastX = ev.clientX;
+      lastY = ev.clientY;
+      moved = false;
+      wrap.setPointerCapture(ev.pointerId);
+      const wrapRect = wrap.getBoundingClientRect();
+
+      if (panGesture) {
+        mode = "pan";
+        wrap.classList.add("panning");
+        return;
+      }
+      if (ev.button !== 0) return;
+
+      if (nodeEl) {
+        mode = "node";
+        dragUid = nodeEl.dataset.uid;
+        if (ev.shiftKey) {
+          if (isSelected(dragUid)) selectedUids.delete(String(dragUid));
+          else selectedUids.add(String(dragUid));
+          selectedUid = String(dragUid);
+        } else if (!isSelected(dragUid)) {
+          setSelection([dragUid], dragUid);
+        } else {
+          selectedUid = String(dragUid);
+        }
+        groupOrigins = {};
+        selectedUids.forEach((uid) => {
+          const p = view().positions[uid];
+          if (p) groupOrigins[uid] = { x: p.x, y: p.y };
+        });
+        const w = clientToWorld(ev.clientX, ev.clientY);
+        const p = view().positions[dragUid];
+        worldGrabX = w.x;
+        worldGrabY = w.y;
+        wrap.classList.add("dragging-node");
+        if (latest && latest.trees && latest.trees[activeTree]) {
+          const live = findByUid(latest.trees[activeTree].root, dragUid);
+          renderDetail(live);
+        }
+        applySelectionVisual();
+      } else {
+        mode = "marquee";
+        marqueeStart = {
+          clientX: ev.clientX,
+          clientY: ev.clientY,
+          localX: ev.clientX - wrapRect.left,
+          localY: ev.clientY - wrapRect.top,
+          additive: ev.shiftKey,
+        };
+        wrap.classList.add("selecting");
+        showMarquee(marqueeStart.localX, marqueeStart.localY, marqueeStart.localX, marqueeStart.localY);
+      }
+    });
+
+    wrap.addEventListener("pointermove", (ev) => {
+      if (!mode) return;
+      const dx = ev.clientX - lastX;
+      const dy = ev.clientY - lastY;
+      if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+      lastX = ev.clientX;
+      lastY = ev.clientY;
+      if (mode === "pan") {
+        const v = view();
+        v.panX += dx;
+        v.panY += dy;
+        applyViewportTransform();
+      } else if (mode === "node" && dragUid) {
+        const w = clientToWorld(ev.clientX, ev.clientY);
+        const ddx = w.x - worldGrabX;
+        const ddy = w.y - worldGrabY;
+        const uids = selectedUids.size ? selectedUids : new Set([String(dragUid)]);
+        uids.forEach((uid) => {
+          const origin = groupOrigins[uid] || view().positions[uid];
+          if (!origin) return;
+          const next = { x: origin.x + ddx, y: origin.y + ddy };
+          view().positions[uid] = next;
+          moveNodeDom(uid, next.x, next.y);
+        });
+        redrawEdges();
+      } else if (mode === "marquee" && marqueeStart) {
+        const wrapRect = wrap.getBoundingClientRect();
+        showMarquee(
+          marqueeStart.localX,
+          marqueeStart.localY,
+          ev.clientX - wrapRect.left,
+          ev.clientY - wrapRect.top
+        );
+      }
+    });
+
+    function endPointer(ev) {
+      if (!mode) return;
+      const finishedMode = mode;
+      const didMove = moved;
+      wrap.classList.remove("panning", "dragging-node", "selecting");
+      if (mode === "marquee" && marqueeStart) {
+        const a = clientToWorld(marqueeStart.clientX, marqueeStart.clientY);
+        const b = clientToWorld(ev.clientX, ev.clientY);
+        const hits = nodesInWorldRect(a.x, a.y, b.x, b.y);
+        if (!moved) {
+          if (!marqueeStart.additive) setSelection([], null);
+        } else if (marqueeStart.additive) {
+          hits.forEach((uid) => selectedUids.add(String(uid)));
+          if (hits.length) selectedUid = String(hits[hits.length - 1]);
+        } else {
+          setSelection(hits, hits[0]);
+        }
+        hideMarquee();
+        if (selectedUid && latest && latest.trees && latest.trees[activeTree]) {
+          renderDetail(findByUid(latest.trees[activeTree].root, selectedUid));
+        } else if (!selectedUids.size) {
+          renderDetail(null);
+        }
+        applySelectionVisual();
+      }
+      if (didMove && (finishedMode === "node" || finishedMode === "pan")) {
+        schedulePersist();
+      }
+      mode = null;
+      dragUid = null;
+      marqueeStart = null;
+      groupOrigins = {};
+      try {
+        wrap.releasePointerCapture(ev.pointerId);
+      } catch (_) {}
+    }
+    wrap.addEventListener("pointerup", endPointer);
+    wrap.addEventListener("pointercancel", endPointer);
+    wrap.addEventListener("contextmenu", (ev) => ev.preventDefault());
+
+    window.addEventListener("keydown", (ev) => {
+      if (ev.code === "Space") {
+        spaceDown = true;
+        ev.preventDefault();
+      }
+      if (ev.code === "Escape") {
+        setSelection([], null);
+        renderDetail(null);
+        applySelectionVisual();
+      }
+    });
+    window.addEventListener("keyup", (ev) => {
+      if (ev.code === "Space") spaceDown = false;
+    });
+
+    wrap.addEventListener(
+      "wheel",
+      (ev) => {
+        ev.preventDefault();
+        const factor = ev.deltaY > 0 ? 0.9 : 1.11;
+        zoomAt(factor, ev.clientX, ev.clientY);
+      },
+      { passive: false }
+    );
+
+    document.getElementById("zoomIn").onclick = () => {
+      const r = wrap.getBoundingClientRect();
+      zoomAt(1.15, r.left + r.width / 2, r.top + r.height / 2);
+    };
+    document.getElementById("zoomOut").onclick = () => {
+      const r = wrap.getBoundingClientRect();
+      zoomAt(1 / 1.15, r.left + r.width / 2, r.top + r.height / 2);
+    };
+    document.getElementById("zoomFit").onclick = () => fitToView();
+    document.getElementById("layoutReset").onclick = () => {
+      rebuildGraph(true);
+      fitToView();
+      schedulePersist();
+    };
+    document.getElementById("layoutSave").onclick = () => {
+      persistLayouts(true);
+    };
+
+    window.addEventListener("resize", () => {
+      if (view().fitted) fitToView();
+    });
+
+    function renderDetail(node) {
+      const el = document.getElementById("nodeDetail");
+      if (!node) {
+        el.className = "detail";
+        el.innerHTML = "";
+        return;
+      }
+      el.className = "detail show";
+      el.innerHTML =
+        "<h3>" +
+        esc(node.name || "?") +
+        "</h3>" +
+        "<div>status: <b style='color:" +
+        (statusColor[node.status] || "#fff") +
+        "'>" +
+        esc(node.status || "") +
+        "</b></div>" +
+        "<div>type: " +
+        esc(node.type || "") +
+        " / " +
+        esc(node.registration || "") +
+        "</div>" +
+        "<div>path: " +
+        esc(node.path || "") +
+        "</div>" +
+        "<pre>" +
+        esc(JSON.stringify(node.ports || {}, null, 2)) +
+        "</pre>";
+    }
+
+    function renderBb() {
+      const filter = (document.getElementById("bbFilter").value || "").toLowerCase();
+      const rootEl = document.getElementById("bbRoot");
+      const bb = (latest && latest.blackboard) || {};
+      const keys = Object.keys(bb).sort();
+      const rows = keys
+        .filter((k) => !filter || k.toLowerCase().includes(filter))
+        .map(
+          (k) =>
+            "<tr><td class='key'>" +
+            esc(k) +
+            "</td><td class='val'>" +
+            esc(bb[k]) +
+            "</td></tr>"
+        )
+        .join("");
+      if (!rows) {
+        rootEl.className = "empty";
+        rootEl.textContent = "无匹配键";
+        return;
+      }
+      rootEl.className = "";
+      rootEl.innerHTML =
+        "<table><thead><tr><th>key</th><th>value</th></tr></thead><tbody>" +
+        rows +
+        "</tbody></table>";
+    }
+
+    document.getElementById("bbFilter").addEventListener("input", renderBb);
+
+    function findByUid(node, uid) {
+      if (!node) return null;
+      if (String(node.uid) === String(uid)) return node;
+      for (const c of node.children || []) {
+        const f = findByUid(c, uid);
+        if (f) return f;
+      }
+      return null;
+    }
+
+    let firstData = true;
+    async function poll() {
+      try {
+        if (!layoutHydrated) {
+          await hydrateLayouts();
+        }
+        const r = await fetch("/api/snapshot?t=" + Date.now());
+        if (!r.ok) throw new Error("http " + r.status);
+        latest = await r.json();
+        document.getElementById("meta").textContent =
+          "已连接 · stamp=" +
+          (latest.stamp_ms || "-") +
+          " · " +
+          Object.keys(latest.trees || {}).join("/");
+        if (firstData || !view().structureKey) {
+          rebuildGraph(false);
+          firstData = false;
+        } else {
+          updateStatusesOnly();
+        }
+        renderBb();
+        if (selectedUid != null && latest.trees && latest.trees[activeTree]) {
+          const live = findByUid(latest.trees[activeTree].root, selectedUid);
+          if (live) renderDetail(live);
+        }
+      } catch (e) {
+        document.getElementById("meta").textContent = "等待 bt_snapshot …";
+      }
+    }
+
+    setInterval(poll, 200);
+    poll();
+  </script>
+</body>
+</html>

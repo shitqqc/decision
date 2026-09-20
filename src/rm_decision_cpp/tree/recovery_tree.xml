@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="TunnelRecoverySubTree">
+    <TunnelTimeoutBackoutAction
+      timeout_s="15.0"
+      max_backout_s="10.0" />
+  </BehaviorTree>
+</root>
