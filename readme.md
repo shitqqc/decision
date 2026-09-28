@@ -1,93 +1,73 @@
-# 华南师范大学PIONEER战队2026赛季导航开发仓库
+# 2026 赛季决策框架目标
 
-基于深北莫polorbear战队pb2025_sentry_nav开发，原仓库地址：
-<https://github.com/polarbear-robotics/pb2025_sentry_nav>
-配套仿真地址：
-<https://github.com/SMBU-PolarBear-Robotics-Team/rmu_gazebo_simulator>
+包：`rm_decision_cpp`。**BTv4 多树**，算法来源为 **navi_minco_bit 全量树**（resource / tactical / nav+recovery / stance / gimbal）。下行仍为 `SentryCmd` + `/nav/use_spin` + Nav2 `NavigateToPose`。
 
-## 目前完成功能
+**不做（缺基础设施时节点 stub FAILURE）**：云台硬件 egress、隧道 cmd_vel / 换图 LoadMap、雷达 `enemies_info` 闭环。
 
-1. 指定角度的pid底盘控制，限制速度下通过指定区域
-2. 自动录包
+---
 
-## Usage
+## 基础功能
 
-### Start
+### 1. 多树编排与只读可视化
 
-拉取仓库
+Tick：`resource → tactical → nav → stance → gimbal`。
 
-```bash
-git clone git@github.com:SCNU-PIONEER/PIONEER_sentry_nav.git
-cd PIONEER_sentry_nav/
-```
+监控默认用 **BT Monitor（Web）**：决策每 tick 发 `bt_snapshot`（五树节点状态 + 黑板 JSON），浏览器以方框节点 + 箭头连线只读展示当前路径与数值。**不做改树**。
 
-安装依赖
+节点实现按 bit 目录拆分：`bt/action/*`、`bt/condition/*`，在 `BtEngine::registerNodes_` 内注册（含 bit 原名别名），不单开 `register_nodes.cpp`。
 
-```bash
-rosdep install -r --from-paths src --ignore-src --rosdistro $ROS_DISTRO -y
-```
+### 节点移植状态（相对 navi_minco_bit）
 
-编译
+| 类别 | 状态 |
+|------|------|
+| 资源/战术/导航设点/基础姿态陀螺/Nav2 | 已接 BbKey + SentryCmd / use_spin |
+| 远程兑换弹药/血量 | 写 `buy_projectile_times` / `buy_hp_times` |
+| 前哨/高地/英雄守卫等纯黑板条件 | 已实现（依赖 GameInfo 字段） |
+| 强化姿态 4–6 | 可写黑板；egress 钳制到 posture 1–3 |
+| 云台 Track/SetGimbal* | 只写黑板；**无硬件 egress** |
+| 隧道/过洞/换图/楼梯下降 | **stub FAILURE**，待 LoadMap / cmd_vel / 队友 ingress |
 
 ```bash
-colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+ros2 launch rm_decision_cpp run.launch.py namespace:=nav
+ros2 launch rm_decision_cpp bt_monitor.launch.py
+# 浏览器打开 http://127.0.0.1:8765/
 ```
 
-> 关于编译参数：
->-DCMAKE_BUILD_TYPE=Release：编译时使用Release模式，可以加快编译速度，并优化代码运行效率。 （必须，否则重定位无法正常运行）
->--symlink-install：使用符号链接进行安装，可以避免重复编译和安装，节省存储空间和编译时间。  （加上后更改config时无须重新编译）
+话题默认：`/nav/bt_snapshot`（`std_msgs/String` JSON）。
 
-### Run
+### 2. 裁判与位姿入口
 
->参考深圳北理莫斯科大学北极熊战队pb2025_sentry_nav仓库
+- `IRefereeIngress` ← 扩展后的 `GameInfo`
+- `IPoseIngress` ← 里程计，写 `current_pose_*`，供区域判定
 
-#### 仿真
+### 3. 区域与航点
 
-```bash
-#导航模式
-ros2 launch pb2025_nav_bringup rm_navigation_simulation_launch.py \
-world:=rmuc_2026 \
-slam:=False
+`config/zones.yaml`（RMUC 默认）：`nav_points` + `own_supply` / `own_outpost` / `enemy_fort` 等。
+
+### 4. 导航 / 姿态 / 资源
+
+与 bit 树一致：人工点、低血低弹回 HOME、attack→敌堡、时间窗前哨与巡逻；姿态交战/热量/防御/过洞；陀螺与敌堡超电；复活与补给区买弹。
+
+---
+
+## 输入 / 输出契约
+
+| 方向 | 话题 / 动作 | 说明 |
+|------|-------------|------|
+| 入 | `game_info` | 扩展 `GameInfo` |
+| 入 | `odom`（可配） | 位姿 |
+| 出 | `sentry_cmd` | 黑板驱动 |
+| 出 | `/nav/use_spin` | 陀螺 |
+| 出 | `navigate_to_pose` | Nav2 |
+| 出 | `bt_snapshot` | 只读监控 JSON |
+
+---
+
+## 技术方案
+
+```text
+GameInfo + Odom → Blackboard + ZoneMap
+  → resource / tactical / nav(+recovery) / stance / gimbal
+  → SentryCmd + use_spin + NavigateToPose
+  → bt_snapshot → Web BT Monitor
 ```
-
-```bash
-#建图模式
-ros2 launch pb2025_nav_bringup rm_navigation_simulation_launch.py \
-slam:=True
-```
-
-保存格栅地图  
-`ros2 run nav2_map_server map_saver_cli -f <YOUR_MAP_NAME>  --ros-args -r __ns:=< YOUR_NAMESPACE >`
->地图保存在工作空间目录下，要使用需手动将.png和.yaml文件复制到`...ws/src/pb2025_sentry_nav/pb2025_nav_bringup/map`对应文件夹.
->完成建图后生成的.pcd文件默认在point_lid/PCD文件夹下，默认名称为`scans.pcd`，需手动复制到`...ws/src/pb2025_sentry_nav/pb2025_nav_bringup/PCD`对应文件夹下，并修改文件名称.
->将点云和栅格地图保存到`pb2025_nav_bringup`后需要重新编译以将文件安装到`install`文件夹下.
-
-#### 实车
-
-```bash
-#建图模式
-ros2 launch pb2025_nav_bringup rm_navigation_reality_launch.py \
-slam:=True \
-use_robot_state_pub:=True
-```
-
-保存地图方式同仿真
-
-```bash
-#导航模式
-ros2 launch pb2025_nav_bringup rm_navigation_reality_launch.py \
-world:=<YOUR_WORLD_NAME> \
-slam:=False \
-use_robot_state_pub:=True
-```
-
-### 录包
-
-每次启动程序5s后，会自动开始录包。录包保存在`..ws/bag/`下，包名称为bag_YYYYMMDD_HHMMSS.bag，其中YYYYMMDD_HHMMSS为当前时间。
-如需修改录包的话题，请修改`src/pb2025_sentry_nav/pb2025_nav_bringup/launch/record_bag.launch.py`文件中`record_topics`变量。录包默认需要`namesoace`，如不使用`namespace`，请将`record_topics`变量中的`/namespace/TOPIC_NAME`改为`/TOPIC_NAME`。
-
-## TODO
-
-1. 增加选择是否有先验点与的参数
-2. 将现有的`sentry_controler`下的功能包直接与控制器插件整合为一个插件
-3. 无先验点云导航下的建图
