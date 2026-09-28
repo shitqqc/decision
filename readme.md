@@ -1,4 +1,4 @@
-# 2026 赛季决策框架目标
+# 2027 赛季决策框架目标
 
 包：`rm_decision_cpp`。**BTv4 多树**，算法来源为 **navi_minco_bit 全量树**（resource / tactical / nav+recovery / stance / gimbal）。下行仍为 `SentryCmd` + `/nav/use_spin` + Nav2 `NavigateToPose`。
 
