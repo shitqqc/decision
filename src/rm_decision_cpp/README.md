@@ -1,12 +1,12 @@
 # rm_decision_cpp
 
-2026 赛季哨兵决策：**BehaviorTree.CPP v4 多树**，算法来源 **navi_minco_bit 全量树**。下行：`SentryCmd` + `/nav/use_spin` + Nav2。
+2027 赛季哨兵决策：**BehaviorTree.CPP v4 多树**，算法来源 **navi_minco_bit 全量树**。下行：`SentryCmd` + `/nav/use_spin` + Nav2。
 
 只读可视化用 Web BT Monitor（不做改树）。
 
 节点按 bit 拆在 `bt/action/`、`bt/condition/`；在 `BtEngine::registerNodes_` 内注册（与 bit `SentryBTManager::registerNodes` 同风格，不单开注册文件）。
 
-说明：[docs/decision_tech_2026.md](../../docs/decision_tech_2026.md)
+说明：[readme.md](../../readme.md)
 
 ## 架构
 
