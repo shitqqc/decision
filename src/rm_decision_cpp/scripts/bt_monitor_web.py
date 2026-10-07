@@ -14,6 +14,7 @@ from ament_index_python.packages import get_package_share_directory
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import String
+from decision_test_web import TestWebBridge
 
 
 def default_layout_path() -> Path:
@@ -25,6 +26,7 @@ class SnapshotBridge(Node):
         super().__init__("bt_monitor_web")
         self._lock = threading.Lock()
         self._latest: dict = {}
+        self.test_bridge = TestWebBridge(self)
         self.create_subscription(String, topic, self._on_msg, 10)
         self.get_logger().info(f"Subscribing snapshot: {topic}")
 
@@ -54,6 +56,18 @@ def make_handler(bridge: SnapshotBridge, web_root: Path, layout_path: Path):
             if path in ("/", "/index.html"):
                 self._serve_file(web_root / "index.html", "text/html; charset=utf-8")
                 return
+            test_resources = {
+                "/api/test/page": ("test.html", "text/html; charset=utf-8"),
+                "/api/test/assets/test.js": ("test.js", "text/javascript; charset=utf-8"),
+                "/api/test/assets/test.css": ("test.css", "text/css; charset=utf-8"),
+            }
+            if path in test_resources:
+                filename, content_type = test_resources[path]
+                self._serve_file(web_root / filename, content_type)
+                return
+            if path == "/api/test/state":
+                self._json_bytes(json.dumps(bridge.test_bridge.state()).encode("utf-8"))
+                return
             if path == "/api/snapshot":
                 body = json.dumps(bridge.snapshot()).encode("utf-8")
                 self._json_bytes(body)
@@ -69,6 +83,23 @@ def make_handler(bridge: SnapshotBridge, web_root: Path, layout_path: Path):
                 self._json_bytes(json.dumps(data).encode("utf-8"))
                 return
             self.send_error(404)
+
+        def do_POST(self):
+            path = self.path.split("?", 1)[0]
+            if path not in ("/api/test/enabled", "/api/test/scenario", "/api/test/apply", "/api/test/reset"):
+                self.send_error(404)
+                return
+            try:
+                payload = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))))
+                bridge.test_bridge.operate(path.rsplit("/", 1)[1], payload)
+                self._json_bytes(b'{"ok":true}')
+            except Exception as exc:
+                body = json.dumps({"error": str(exc)}).encode("utf-8")
+                self.send_response(503)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
 
         def do_PUT(self) -> None:  # noqa: N802
             path = self.path.split("?", 1)[0]

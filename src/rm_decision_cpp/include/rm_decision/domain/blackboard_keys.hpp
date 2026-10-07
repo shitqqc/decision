@@ -32,6 +32,9 @@ inline constexpr const char * kControlMode = "control_mode";
 inline constexpr const char * kManualGoalX = "manual_goal_x";
 inline constexpr const char * kManualGoalY = "manual_goal_y";
 inline constexpr const char * kCanFreeResurrect = "can_free_resurrect";
+inline constexpr const char * kEnhancedAttackRemaining = "enhanced_attack_remaining_time";
+inline constexpr const char * kEnhancedDefendRemaining = "enhanced_defend_remaining_time";
+inline constexpr const char * kEnhancedMoveRemaining = "enhanced_move_remaining_time";
 
 // Pose
 inline constexpr const char * kCurrentPoseX = "current_pose_x";
@@ -75,9 +78,6 @@ inline constexpr const char * kNotAimEnemy = "not_aim_enemy";
 inline constexpr const char * kCapacitorCapacity = "capacitor_capacity";
 inline constexpr const char * kManualStanceOverrideActive = "manual_stance_override_active";
 inline constexpr const char * kManualStanceOverride = "manual_stance_override";
-inline constexpr const char * kEnhancedAttackRemaining = "enhanced_attack_remaining_time";
-inline constexpr const char * kEnhancedDefendRemaining = "enhanced_defend_remaining_time";
-inline constexpr const char * kEnhancedMoveRemaining = "enhanced_move_remaining_time";
 inline constexpr const char * kRemainingAmmoExchange = "remaining_ammo_exchange";
 inline constexpr const char * kRemoteAmmoExchangeCount = "remote_ammo_exchange_count";
 inline constexpr const char * kRemoteHealthExchangeCount = "remote_health_exchange_count";

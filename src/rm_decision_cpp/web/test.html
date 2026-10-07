@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Decision Test</title>
+  <link rel="stylesheet" href="/api/test/assets/test.css">
+  <script src="/api/test/assets/test.js" defer></script>
+</head>
+<body>
+  <header><h1>Decision Test</h1><span id="status">连接中</span></header>
+  <main>
+    <div class="controls">
+      <label><input id="enabled" type="checkbox"> Web 编辑</label>
+      <select id="scenario" aria-label="场景"></select>
+      <button id="switch" type="button">应用场景</button>
+      <button id="reset" type="button">恢复场景默认值</button>
+    </div>
+    <p id="error" role="alert"></p>
+    <form id="form"><fieldset id="fields" disabled></fieldset><button id="apply" type="submit" disabled>应用修改</button></form>
+  </main>
+</body>
+</html>

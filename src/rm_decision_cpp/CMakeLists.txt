@@ -81,8 +81,11 @@ install(DIRECTORY tree config launch web DESTINATION share/${PROJECT_NAME})
 install(PROGRAMS
   scripts/bt_monitor_web.py
   scripts/mock_decision_pub.py
+  scripts/decision_test_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
+install(FILES scripts/decision_test_web.py
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

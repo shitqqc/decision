@@ -187,6 +187,57 @@
       font-family: "IBM Plex Mono", ui-monospace, monospace;
       font-size: 0.72rem;
     }
+    .page-footer {
+      flex-shrink: 0;
+      padding: 0.55rem 1rem;
+      border-top: 1px solid var(--border);
+      background: var(--panel);
+      font-size: 0.85rem;
+    }
+    .page-footer button {
+      color: var(--text);
+      background: transparent;
+      border: 0;
+      padding: 0;
+      font: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .test-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: rgba(0, 0, 0, 0.62);
+    }
+    .test-modal.show { display: flex; }
+    .test-dialog {
+      position: relative;
+      width: min(900px, 100%);
+      height: min(720px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #f4f6f7;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+    }
+    .test-close {
+      position: absolute;
+      top: 0.45rem;
+      right: 0.65rem;
+      z-index: 1;
+      width: 2rem;
+      height: 2rem;
+      border: 0;
+      background: transparent;
+      color: #20242a;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .test-frame { width: 100%; height: 100%; border: 0; }
   </style>
 </head>
 <body>
@@ -247,6 +298,13 @@
       </div>
     </section>
   </div>
+  <footer class="page-footer"><button type="button" id="testOpen">测试</button></footer>
+  <div class="test-modal" id="testModal" aria-hidden="true">
+    <div class="test-dialog" role="dialog" aria-modal="true" aria-label="Decision Test">
+      <button class="test-close" type="button" id="testClose" aria-label="关闭">×</button>
+      <iframe class="test-frame" id="testFrame" title="Decision Test"></iframe>
+    </div>
+  </div>
   <script>
     const TREE_ORDER = ["resource", "tactical", "nav", "stance", "gimbal"];
     const BOX_W = 150;
@@ -257,6 +315,26 @@
     const EDGE_STUB = 14;
     const LAYOUT_LS_KEY = "bt_monitor_layouts_v4";
     const LAYOUT_VERSION = 4;
+
+    const testModal = document.getElementById("testModal");
+    const testFrame = document.getElementById("testFrame");
+    function closeTest() {
+      testModal.classList.remove("show");
+      testModal.setAttribute("aria-hidden", "true");
+      testFrame.src = "about:blank";
+    }
+    document.getElementById("testOpen").onclick = () => {
+      testFrame.src = "/api/test/page";
+      testModal.classList.add("show");
+      testModal.setAttribute("aria-hidden", "false");
+    };
+    document.getElementById("testClose").onclick = closeTest;
+    testModal.onclick = (event) => {
+      if (event.target === testModal) closeTest();
+    };
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && testModal.classList.contains("show")) closeTest();
+    });
 
     const statusColor = {
       IDLE: "#6b7c8f",

@@ -5,7 +5,7 @@
 
       <!-- P0: 复活（最高优先级） -->
       <ReactiveSequence name="ReviveBranch">
-        <CheckHealth threshold="0" mode="less" />
+        <CheckHealth threshold="0" mode="less_equal" />
         <ReactiveFallback>
           <!-- 免费复活优先 -->
           <Sequence name="FreeRevive">

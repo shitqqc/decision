@@ -55,7 +55,7 @@ def _check_decision_interfaces_typesupport(_context):
     if 'cyclonedds' in rmw or 'rmw_cyclonedds' in rmw:
         need_token = 'cyclonedds'
     else:
-        # Humble default and typical rmw_fastrtps_cpp installs
+        # default and typical rmw_fastrtps_cpp installs
         need_token = 'fastrtps'
     if not any(need_token in p.name for p in libs):
         raise RuntimeError(

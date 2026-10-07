@@ -44,7 +44,7 @@ void GameInfoRefereeIngress::update(BT::Blackboard & _bb)
   _bb.set(BbKey::kHealth, health);
   _bb.set(BbKey::kCurrentHp, g.current_hp);
   _bb.set(BbKey::kGameProgress, g.game_progress);
-  _bb.set(BbKey::kGameTimeRemaining, static_cast<int>(g.game_remaining_time));
+  _bb.set(BbKey::kGameTimeRemaining, static_cast<int>(g.game_time_remaining));
   _bb.set(BbKey::kRemainingEnergy, g.remaining_energy);
   _bb.set(BbKey::kAllyOutpostHp, g.ally_outpost_hp);
   _bb.set(BbKey::kAllyBaseHp, g.ally_base_hp);
@@ -65,6 +65,9 @@ void GameInfoRefereeIngress::update(BT::Blackboard & _bb)
   _bb.set(BbKey::kManualGoalX, static_cast<double>(g.manual_goal_x));
   _bb.set(BbKey::kManualGoalY, static_cast<double>(g.manual_goal_y));
   _bb.set(BbKey::kCanFreeResurrect, g.can_free_resurrect);
+  _bb.set(BbKey::kEnhancedAttackRemaining, static_cast<float>(g.enhanced_attack_remaining_time));
+  _bb.set(BbKey::kEnhancedDefendRemaining, static_cast<float>(g.enhanced_defend_remaining_time));
+  _bb.set(BbKey::kEnhancedMoveRemaining, static_cast<float>(g.enhanced_move_remaining_time));
 }
 
 }  // namespace rm_decision
