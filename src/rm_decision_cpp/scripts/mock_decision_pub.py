@@ -64,7 +64,7 @@ class MockDecisionPub(Node):
     def _fill_base(self, msg: GameInfo) -> None:
         msg.current_hp = 400
         msg.game_progress = 4  # in match
-        msg.game_remaining_time = 350
+        msg.game_time_remaining = 350
         msg.remaining_energy = 50
         msg.ally_outpost_hp = 1500
         msg.ally_base_hp = 5000
@@ -91,45 +91,45 @@ class MockDecisionPub(Node):
         x, y, yaw = 5.0, 5.0, 0.0
 
         if name == "normal":
-            msg.game_remaining_time = 380
+            msg.game_time_remaining = 380
             msg.out_of_combat = True
             x, y = 12.0, 5.0
         elif name == "low_ammo":
             msg.bullet_remaining_17mm = 30
-            msg.game_remaining_time = 300
+            msg.game_time_remaining = 300
             x, y = 10.0, 6.0
         elif name == "low_hp":
             msg.current_hp = 35
             msg.out_of_combat = False
-            msg.game_remaining_time = 280
+            msg.game_time_remaining = 280
             x, y = 14.0, 8.0
         elif name == "engaged":
             msg.current_hp = 280
             msg.out_of_combat = False
             msg.current_heat = 80
-            msg.game_remaining_time = 260
+            msg.game_time_remaining = 260
             x, y = 15.0, 10.0
         elif name == "attack_fort":
             msg.big_energy_status = 1
             msg.energy_activatable = True
-            msg.game_remaining_time = 90
+            msg.game_time_remaining = 90
             msg.out_of_combat = True
             x, y = 18.0, 7.0
         elif name == "manual":
             msg.control_mode = 1
             msg.manual_goal_x = 22.0
             msg.manual_goal_y = 7.5
-            msg.game_remaining_time = 200
+            msg.game_time_remaining = 200
             x, y = 8.0, 4.0
         elif name == "dead":
             msg.current_hp = 0
             msg.can_free_resurrect = True
-            msg.game_remaining_time = 250
+            msg.game_time_remaining = 250
             x, y = 6.0, 3.0
         elif name == "supply":
             msg.bullet_remaining_17mm = 80
             msg.coin_remaining = 250
-            msg.game_remaining_time = 320
+            msg.game_time_remaining = 320
             # own_supply zone from zones.yaml: min_x 1.5 max_x 3.8 min_y 0 max_y 4.4
             x, y = 2.5, 2.0
         else:
@@ -161,7 +161,7 @@ class MockDecisionPub(Node):
         if self._tick % 20 == 1:
             self.get_logger().info(
                 f"[{name}] hp={game.current_hp} ammo={game.bullet_remaining_17mm} "
-                f"t={game.game_remaining_time} pose=({x:.1f},{y:.1f}) "
+                f"t={game.game_time_remaining} pose=({x:.1f},{y:.1f}) "
                 f"mode={game.control_mode} energy={game.big_energy_status}"
             )
 

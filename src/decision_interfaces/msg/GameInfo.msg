@@ -1,6 +1,6 @@
 uint16 current_hp
 uint8 game_progress
-uint16 game_remaining_time
+uint16 game_time_remaining
 uint8 remaining_energy
 uint16 ally_outpost_hp
 uint16 ally_base_hp
@@ -10,6 +10,9 @@ bool out_of_combat
 uint16 redeemable_17mm
 uint16 bullet_remaining_17mm
 bool energy_activatable
+float32 enhanced_attack_remaining_time
+float32 enhanced_defend_remaining_time
+float32 enhanced_move_remaining_time
 
 uint16 coin_remaining
 uint16 enemy_outpost_hp

@@ -61,6 +61,9 @@ public:
   CheckRemoteExchangeCooldown(const std::string & _name, const BT::NodeConfig & _config);
   static BT::PortsList providedPorts();
   BT::NodeStatus tick() override;
+
+private:
+  double last_exchange_sec_{-1.0e9};
 };
 
 class CheckRemainingAmmoExchange : public BT::ConditionNode

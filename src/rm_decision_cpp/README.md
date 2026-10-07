@@ -39,4 +39,8 @@ ros2 launch rm_decision_cpp mock_decision.launch.py
 
 # 固定某一场景
 ros2 launch rm_decision_cpp mock_decision.launch.py scenario:=attack_fort
+
+# 自定义测试
+# 应用场景 / 应用修改：使用已定义的场景模板 / 临时覆盖数据
+ros2 launch rm_decision_cpp decision_test.launch.py
 ```

@@ -1,0 +1,95 @@
+base:
+  game_info:
+    current_hp: 400
+    game_progress: 4
+    game_time_remaining: 350
+    remaining_energy: 50
+    ally_outpost_hp: 1500
+    ally_base_hp: 5000
+    hurt_hp_deduction_reason: 0
+    posture: 3
+    out_of_combat: true
+    redeemable_17mm: 200
+    bullet_remaining_17mm: 300
+    energy_activatable: false
+    coin_remaining: 400
+    enemy_outpost_hp: 1200
+    enemy_base_hp: 5000
+    current_heat: 20
+    heat_limit: 240
+    big_energy_status: 0
+    control_mode: 0
+    manual_goal_x: 0.0
+    manual_goal_y: 0.0
+    can_free_resurrect: true
+  pose:
+    x: 5.0
+    y: 5.0
+    yaw: 0.0
+scenarios:
+  normal:
+    game_info:
+      game_time_remaining: 380
+    pose:
+      x: 12.0
+  low_ammo:
+    game_info:
+      bullet_remaining_17mm: 30
+      game_time_remaining: 300
+    pose:
+      x: 10.0
+      y: 6.0
+  low_hp:
+    game_info:
+      current_hp: 35
+      out_of_combat: false
+      game_time_remaining: 280
+    pose:
+      x: 14.0
+      y: 8.0
+  engaged:
+    game_info:
+      current_hp: 280
+      out_of_combat: false
+      current_heat: 80
+      game_time_remaining: 260
+    pose:
+      x: 15.0
+      y: 10.0
+  attack_fort:
+    game_info:
+      big_energy_status: 1
+      energy_activatable: true
+      game_time_remaining: 90
+    pose:
+      x: 18.0
+      y: 7.0
+  manual:
+    game_info:
+      control_mode: 1
+      manual_goal_x: 22.0
+      manual_goal_y: 7.5
+      game_time_remaining: 200
+    pose:
+      x: 8.0
+      y: 4.0
+  dead:
+    game_info:
+      current_hp: 0
+      game_time_remaining: 250
+    pose:
+      x: 6.0
+      y: 3.0
+  supply:
+    game_info:
+      bullet_remaining_17mm: 80
+      coin_remaining: 250
+      game_time_remaining: 320
+    pose:
+      x: 2.5
+      y: 2.0
+current:
+  scenario: attack_fort
+  overrides:
+    game_info:
+      control_mode: 1

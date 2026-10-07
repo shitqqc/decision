@@ -55,6 +55,9 @@ public:
   UpdateStanceDuration(const std::string & _name, const BT::NodeConfig & _config);
   static BT::PortsList providedPorts() { return {}; }
   BT::NodeStatus tick() override;
+
+private:
+  int last_game_time_{-1};
 };
 
 class ApplyManualStanceOverride : public BT::SyncActionNode
