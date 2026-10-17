@@ -9,5 +9,6 @@
     odom_topic: "/odom"
     sentry_cmd_topic: "sentry_cmd"
     use_spin_topic: "/nav/use_spin"
+    energy_aim_topic: "energy_aim_mode"
     # empty = share/rm_decision_cpp/config/zones.yaml
     zones_yaml: ""

@@ -122,6 +122,7 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
 
   factory.registerNodeType<TrackTargetAction>("TrackTargetAction");
   factory.registerNodeType<SetGimbalPose>("SetGimbalPose");
+  factory.registerNodeType<SetEnergyAim>("SetEnergyAim");
   factory.registerNodeType<SetGimbalPoseByAreaAction>("SetGimbalPoseByAreaAction", zones);
   factory.registerNodeType<TunnelTimeoutBackoutAction>("TunnelTimeoutBackoutAction");
 }

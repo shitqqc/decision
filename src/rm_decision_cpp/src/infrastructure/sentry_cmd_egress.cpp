@@ -3,20 +3,24 @@
 #include "rm_decision/domain/blackboard_keys.hpp"
 
 #include <cstdint>
+#include <std_msgs/msg/u_int8.hpp>
 
 namespace rm_decision
 {
 
 SentryCmdEgress::SentryCmdEgress(
-  rclcpp::Node & _node, const std::string & _sentry_cmd_topic, const std::string & _use_spin_topic)
+  rclcpp::Node & _node, const std::string & _sentry_cmd_topic, const std::string & _use_spin_topic,
+  const std::string & _energy_aim_topic)
 : node_(_node)
 {
   sentry_pub_ = node_.create_publisher<decision_interfaces::msg::SentryCmd>(
     _sentry_cmd_topic, rclcpp::QoS(1).transient_local());
   spin_pub_ = node_.create_publisher<std_msgs::msg::Bool>(_use_spin_topic, rclcpp::QoS(10));
+  energy_aim_pub_ =
+    node_.create_publisher<std_msgs::msg::UInt8>(_energy_aim_topic, rclcpp::QoS(10));
   RCLCPP_INFO(
-    node_.get_logger(), "SentryCmdEgress: blackboard-driven cmd=%s spin=%s",
-    _sentry_cmd_topic.c_str(), _use_spin_topic.c_str());
+    node_.get_logger(), "SentryCmdEgress: blackboard-driven cmd=%s spin=%s energy_aim=%s",
+    _sentry_cmd_topic.c_str(), _use_spin_topic.c_str(), _energy_aim_topic.c_str());
 }
 
 
@@ -68,6 +72,12 @@ void SentryCmdEgress::publish(const BT::Blackboard & _bb)
   std_msgs::msg::Bool spin_msg;
   spin_msg.data = use_spin;
   spin_pub_->publish(spin_msg);
+
+  std::uint8_t energy_aim = 0;
+  (void)_bb.get(BbKey::kEnergyAimMode, energy_aim);
+  std_msgs::msg::UInt8 energy_aim_msg;
+  energy_aim_msg.data = energy_aim;
+  energy_aim_pub_->publish(energy_aim_msg);
 }
 
 }  // namespace rm_decision

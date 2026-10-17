@@ -88,6 +88,7 @@ inline constexpr const char * kTunnelAlignActive = "tunnel_align_active";
 inline constexpr const char * kGimbalYawCmd = "gimbal_yaw_cmd";
 inline constexpr const char * kGimbalPitchCmd = "gimbal_pitch_cmd";
 inline constexpr const char * kPitchMode = "pitch_mode";
+inline constexpr const char * kEnergyAimMode = "energy_aim_mode";
 inline constexpr const char * kScanYawMin = "scan_yaw_min";
 inline constexpr const char * kScanYawMax = "scan_yaw_max";
 
