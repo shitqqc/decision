@@ -27,6 +27,18 @@ public:
   BT::NodeStatus tick() override;
 };
 
+class SetEnergyAim : public BT::SyncActionNode
+{
+public:
+  SetEnergyAim(const std::string & _name, const BT::NodeConfig & _config);
+  static BT::PortsList providedPorts();
+  BT::NodeStatus tick() override;
+
+private:
+  bool window_open_{false};
+  double start_sec_{-1.0};
+};
+
 class SetGimbalPoseByAreaAction : public BT::SyncActionNode
 {
 public:

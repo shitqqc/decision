@@ -76,6 +76,7 @@ void DecisionApp::initDefaults_(BT::Blackboard & _bb)
   _bb.set(BbKey::kOutpostEnhancedDefendActive, false);
   _bb.set(BbKey::kPatrolIndex, 0);
   _bb.set(BbKey::kPatrolBranch, 0);
+  _bb.set(BbKey::kEnergyAimMode, static_cast<std::uint8_t>(0));
 }
 
 
@@ -124,7 +125,8 @@ bool DecisionApp::start()
   const std::string cmd_topic = resolveTopic(*node_, "sentry_cmd_topic", "sentry_cmd");
   const std::string spin_topic =
     node_->get_parameter_or<std::string>("use_spin_topic", "/nav/use_spin");
-  command_ = std::make_unique<SentryCmdEgress>(*node_, cmd_topic, spin_topic);
+  const std::string energy_aim_topic = resolveTopic(*node_, "energy_aim_topic", "energy_aim_mode");
+  command_ = std::make_unique<SentryCmdEgress>(*node_, cmd_topic, spin_topic, energy_aim_topic);
 
   blackboard_ = BT::Blackboard::create();
   initDefaults_(*blackboard_);
