@@ -2,7 +2,7 @@
 
 包：`rm_decision_cpp`。**BTv4 多树**，算法来源为 **navi_minco_bit 全量树**（resource / tactical / nav+recovery / stance / gimbal）。下行仍为 `SentryCmd` + `/nav/use_spin` + Nav2 `NavigateToPose`。
 
-**不做（缺基础设施时节点 stub FAILURE）**：云台硬件 egress、隧道 cmd_vel / 换图 LoadMap、雷达 `enemies_info` 闭环。
+**todo:（缺基础设施时节点 stub FAILURE）**：雷达 `enemies_info` 闭环。
 
 ---
 
