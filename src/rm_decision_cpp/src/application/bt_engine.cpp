@@ -100,8 +100,8 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<ControlThroughTunnel>("ControlThroughTunnel");
   factory.registerNodeType<EmergencyStop>("EmergencyStop");
 
-  factory.registerNodeType<NavigateToPoseAction>("NavigateToPose", node);
-  factory.registerNodeType<NavigateToPoseAction>("NavigateToPoseAction", node);
+  factory.registerNodeType<NavigateToPoseAction>("NavigateToPose", node, zones);
+  factory.registerNodeType<NavigateToPoseAction>("NavigateToPoseAction", node, zones);
 
   factory.registerNodeType<SetTacticalMode>("SetTacticalMode");
   factory.registerNodeType<ChangeTacticalAction>("ChangeTacticalAction");
