@@ -5,15 +5,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import rclpy
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_prefix, get_package_share_directory
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import String
+
+sys.path.insert(0, str(Path(get_package_prefix("rm_decision_cpp")) / "lib" / "rm_decision_cpp"))
 from decision_test_web import TestWebBridge
 
 
@@ -26,8 +29,10 @@ class SnapshotBridge(Node):
         super().__init__("bt_monitor_web")
         self._lock = threading.Lock()
         self._latest: dict = {}
+        self._test_latest: dict = {}
         self.test_bridge = TestWebBridge(self)
         self.create_subscription(String, topic, self._on_msg, 10)
+        self.create_subscription(String, "/nav/test/bt_snapshot", self._on_test_msg, 10)
         self.get_logger().info(f"Subscribing snapshot: {topic}")
 
     def _on_msg(self, msg: String) -> None:
@@ -43,8 +48,21 @@ class SnapshotBridge(Node):
         with self._lock:
             return dict(self._latest)
 
+    def _on_test_msg(self, msg: String) -> None:
+        try:
+            data = json.loads(msg.data)
+        except json.JSONDecodeError as exc:
+            self.get_logger().warn(f"bad test snapshot json: {exc}")
+            return
+        with self._lock:
+            self._test_latest = data
 
-def make_handler(bridge: SnapshotBridge, web_root: Path, layout_path: Path):
+    def test_snapshot(self) -> dict:
+        with self._lock:
+            return dict(self._test_latest)
+
+
+def make_handler(bridge: SnapshotBridge, web_root: Path, test_web_root: Path, layout_path: Path):
     layout_lock = threading.Lock()
 
     class Handler(BaseHTTPRequestHandler):
@@ -63,10 +81,13 @@ def make_handler(bridge: SnapshotBridge, web_root: Path, layout_path: Path):
             }
             if path in test_resources:
                 filename, content_type = test_resources[path]
-                self._serve_file(web_root / filename, content_type)
+                self._serve_file(test_web_root / filename, content_type)
                 return
             if path == "/api/test/state":
                 self._json_bytes(json.dumps(bridge.test_bridge.state()).encode("utf-8"))
+                return
+            if path == "/api/test/snapshot":
+                self._json_bytes(json.dumps(bridge.test_snapshot()).encode("utf-8"))
                 return
             if path == "/api/snapshot":
                 body = json.dumps(bridge.snapshot()).encode("utf-8")
@@ -170,12 +191,14 @@ def main() -> None:
     bridge = SnapshotBridge(args.topic)
 
     share = Path(get_package_share_directory("rm_decision_cpp"))
-    web_root = share / "web"
+    web_root = share / "test" / "web"
+    test_web_root = share / "test" / "web"
     if not (web_root / "index.html").is_file():
         web_root = Path(__file__).resolve().parent.parent / "web"
+        test_web_root = web_root
 
     layout_path = Path(args.layout_file).expanduser()
-    handler = make_handler(bridge, web_root, layout_path)
+    handler = make_handler(bridge, web_root, test_web_root, layout_path)
     httpd = ThreadingHTTPServer((args.host, args.port), handler)
     http_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
     http_thread.start()

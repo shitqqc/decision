@@ -4,7 +4,7 @@
 #include "rm_decision/domain/zone_map.hpp"
 #include "rm_decision/infrastructure/bt_snapshot_publisher.hpp"
 #include "rm_decision/interface/i_command_egress.hpp"
-#include "rm_decision/interface/i_pose_ingress.hpp"
+#include "rm_decision/interface/i_nav_info_ingress.hpp"
 #include "rm_decision/interface/i_referee_ingress.hpp"
 
 #include <rclcpp/rclcpp.hpp>
@@ -27,7 +27,8 @@ private:
 
   rclcpp::Node::SharedPtr node_;
   std::unique_ptr<IRefereeIngress> referee_;
-  std::unique_ptr<IPoseIngress> pose_;
+  std::unique_ptr<INavInfoIngress> pose_;
+  std::unique_ptr<INavInfoIngress> tunnel_;
   std::unique_ptr<ICommandEgress> command_;
   std::unique_ptr<BtSnapshotPublisher> snapshot_;
   ZoneMap zones_;

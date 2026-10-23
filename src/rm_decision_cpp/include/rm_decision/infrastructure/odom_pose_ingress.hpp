@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rm_decision/interface/i_pose_ingress.hpp"
+#include "rm_decision/interface/i_nav_info_ingress.hpp"
 
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -12,7 +12,7 @@
 namespace rm_decision
 {
 
-class OdomPoseIngress : public IPoseIngress
+class OdomPoseIngress : public INavInfoIngress
 {
 public:
   OdomPoseIngress(rclcpp::Node & _node, const std::string & _odom_topic);

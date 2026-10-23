@@ -41,6 +41,8 @@ inline constexpr const char * kCurrentPoseX = "current_pose_x";
 inline constexpr const char * kCurrentPoseY = "current_pose_y";
 inline constexpr const char * kCurrentPoseYaw = "current_pose_yaw";
 inline constexpr const char * kPoseValid = "pose_valid";
+// Tunnel
+inline constexpr const char * kThroughTunnel = "through_tunnel";
 
 // Decision outputs / shared
 inline constexpr const char * kTacticalMode = "tactical_mode";
@@ -58,6 +60,11 @@ inline constexpr const char * kBuyHpTimes = "buy_hp_times";
 inline constexpr const char * kInEnemyFortZone = "in_enemy_fort_zone";
 inline constexpr const char * kInOwnSupplyZone = "in_own_supply_zone";
 inline constexpr const char * kInOwnOutpostZone = "in_own_outpost_zone";
+// inline constexpr const char * kCurrentLifterPos = "current_lifter_pos"; // TOP = 0, BOTTOM = 1
+// inline constexpr const char * kDesiredLifterPos = "desired_lifter_pos"; 
+inline constexpr const char * kTargetValid = "target_valid";
+inline constexpr const char * kTargetPoseX = "target_pose_x";
+inline constexpr const char * kTargetPoseY = "target_pose_y";
 
 // bit-port extensions (blackboard-level; egress may not consume yet)
 inline constexpr const char * kEnemyOutpostDestroyed = "enemy_outpost_destroyed";
@@ -70,10 +77,7 @@ inline constexpr const char * kOutpostRetreatActive = "outpost_retreat_active";
 inline constexpr const char * kOutpostEnhancedDefendActive = "outpost_enhanced_defend_active";
 inline constexpr const char * kPatrolIndex = "patrol_index";
 inline constexpr const char * kPatrolBranch = "patrol_branch";
-inline constexpr const char * kTargetValid = "target_valid";
 inline constexpr const char * kTargetArmorId = "target_armor_id";
-inline constexpr const char * kTargetPoseX = "target_pose_x";
-inline constexpr const char * kTargetPoseY = "target_pose_y";
 inline constexpr const char * kNotAimEnemy = "not_aim_enemy";
 inline constexpr const char * kCapacitorCapacity = "capacitor_capacity";
 inline constexpr const char * kManualStanceOverrideActive = "manual_stance_override_active";
@@ -81,10 +85,6 @@ inline constexpr const char * kManualStanceOverride = "manual_stance_override";
 inline constexpr const char * kRemainingAmmoExchange = "remaining_ammo_exchange";
 inline constexpr const char * kRemoteAmmoExchangeCount = "remote_ammo_exchange_count";
 inline constexpr const char * kRemoteHealthExchangeCount = "remote_health_exchange_count";
-inline constexpr const char * kThroughTunnel = "through_tunnel";
-inline constexpr const char * kCurrentInTunnel = "current_in_tunnel";
-inline constexpr const char * kTunnelEscapeActive = "tunnel_escape_active";
-inline constexpr const char * kTunnelAlignActive = "tunnel_align_active";
 inline constexpr const char * kGimbalYawCmd = "gimbal_yaw_cmd";
 inline constexpr const char * kGimbalPitchCmd = "gimbal_pitch_cmd";
 inline constexpr const char * kPitchMode = "pitch_mode";

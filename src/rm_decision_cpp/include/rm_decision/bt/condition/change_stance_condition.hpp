@@ -66,23 +66,19 @@ public:
 class CheckCrossZoneTransition : public BT::ConditionNode
 {
 public:
-  CheckCrossZoneTransition(const std::string & _name, const BT::NodeConfig & _config);
+  CheckCrossZoneTransition(
+    const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
   static BT::PortsList providedPorts() { return {}; }
   BT::NodeStatus tick() override;
+
+private:
+  const ZoneMap * zones_;
 };
 
 class CheckCapacitorCapacity : public BT::ConditionNode
 {
 public:
   CheckCapacitorCapacity(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
-};
-
-class CheckStanceCooldown : public BT::ConditionNode
-{
-public:
-  CheckStanceCooldown(const std::string & _name, const BT::NodeConfig & _config);
   static BT::PortsList providedPorts();
   BT::NodeStatus tick() override;
 };
@@ -100,14 +96,6 @@ class CheckStanceRefreshRequired : public BT::ConditionNode
 public:
   CheckStanceRefreshRequired(const std::string & _name, const BT::NodeConfig & _config);
   static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
-};
-
-class CheckTunnelDeformation : public BT::ConditionNode
-{
-public:
-  CheckTunnelDeformation(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts() { return {}; }
   BT::NodeStatus tick() override;
 };
 

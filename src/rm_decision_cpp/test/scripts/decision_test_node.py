@@ -6,10 +6,11 @@ from pathlib import Path
 
 import rclpy
 import yaml
+from ament_index_python.packages import get_package_share_directory
 from decision_interfaces.msg import GameInfo
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
-from std_msgs.msg import String
+from std_msgs.msg import Bool, String
 from std_srvs.srv import SetBool
 
 class ScenarioStore:
@@ -34,7 +35,8 @@ class ScenarioStore:
 class DecisionTestNode(Node):
     def __init__(self):
         super().__init__("decision_test")
-        self.declare_parameter("data_file", "")
+        config = Path(get_package_share_directory("rm_decision_cpp")) / "test" / "config" / "decision_test.yaml"
+        self.declare_parameter("data_file", str(config))
         self.store = ScenarioStore(self.get_parameter("data_file").value)
         document = self.store.read()
         document["current"] = {"scenario": "normal", "overrides": {}}
@@ -44,6 +46,7 @@ class DecisionTestNode(Node):
         self.file_mtime_ns = self.store.path.stat().st_mtime_ns
         self.game_pub = self.create_publisher(GameInfo, "/nav/game_info", 10)
         self.odom_pub = self.create_publisher(Odometry, "/odom", 10)
+        self.tunnel_pub = self.create_publisher(Bool, "/through_tunnel", 10)
         self.state_pub = self.create_publisher(String, "/nav/decision_test/state", 10)
         self.load()
         self.create_service(SetBool, "/nav/decision_test/web_enabled", self.on_web_enabled)
@@ -88,17 +91,14 @@ class DecisionTestNode(Node):
 
     def check_file(self):
         try: 
-            # 获取文件修改时间
             mtime_ns = self.store.path.stat().st_mtime_ns 
         except Exception as exc: 
             self.error = str(exc)
             self.get_logger().error(self.error)
             self.publish_state()
             return
-        # 文件没有变化
         if mtime_ns == self.file_mtime_ns: 
             return
-        # 文件发生变化，重新加载 
         self.file_mtime_ns = mtime_ns 
         try:
             self.load()
@@ -118,6 +118,7 @@ class DecisionTestNode(Node):
         self.odom.header.stamp = self.get_clock().now().to_msg()
         self.game_pub.publish(self.game)
         self.odom_pub.publish(self.odom)
+        self.tunnel_pub.publish(Bool(data=self.data["through_tunnel"]["data"]))
         self.publish_state()
 
     def tick(self):

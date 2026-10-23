@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="TestTree">
+    <ReactiveSequence name="TestTreeRoot">
+      <UpdateStanceDuration />
+
+      <ReactiveSequence name="MoveStanceNoSpinBranch">
+        <ChangeStance name="ChangeStanceMoveNoSpin" stance="MOVE" cooldown="5.0"/>
+        <Script code="spin_enabled := !through_tunnel" />
+        <SetSpinState use_spin="{spin_enabled}" />
+      </ReactiveSequence>
+
+    </ReactiveSequence>
+  </BehaviorTree>
+</root>

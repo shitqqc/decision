@@ -114,16 +114,6 @@ public:
   BT::NodeStatus tick() override;
 };
 
-class ControlThroughTunnel : public BT::StatefulActionNode
-{
-public:
-  ControlThroughTunnel(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus onStart() override;
-  BT::NodeStatus onRunning() override;
-  void onHalted() override {}
-};
-
 class EmergencyStop : public BT::SyncActionNode
 {
 public:

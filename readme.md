@@ -13,3 +13,14 @@ ros2 launch rm_decision_cpp run.launch.py namespace:=nav
 ros2 launch rm_decision_cpp bt_monitor.launch.py
 # 浏览器打开 http://127.0.0.1:8765/
 ```
+
+### 测试
+
+```bash
+# 测试数据节点
+ros2 launch rm_decision_cpp decision_test.launch.py
+
+# 完整测试栈
+ros2 launch rm_decision_cpp bt_test.launch.py
+ros2 launch rm_decision_cpp bt_test.launch.py tree_xml_file:=test_tree.xml
+```

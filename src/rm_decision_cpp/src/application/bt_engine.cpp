@@ -72,12 +72,10 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<CheckOutpostLowHealthDefend>("CheckOutpostLowHealthDefend");
   factory.registerNodeType<CheckEnemyAreaRecentlyHurt>("CheckEnemyAreaRecentlyHurt");
   factory.registerNodeType<CheckTargetDistance>("CheckTargetDistance");
-  factory.registerNodeType<CheckCrossZoneTransition>("CheckCrossZoneTransition");
+  factory.registerNodeType<CheckCrossZoneTransition>("CheckCrossZoneTransition", zones);
   factory.registerNodeType<CheckCapacitorCapacity>("CheckCapacitorCapacity");
-  factory.registerNodeType<CheckStanceCooldown>("CheckStanceCooldown");
   factory.registerNodeType<CheckStanceEffectLimit>("CheckStanceEffectLimit");
   factory.registerNodeType<CheckStanceRefreshRequired>("CheckStanceRefreshRequired");
-  factory.registerNodeType<CheckTunnelDeformation>("CheckTunnelDeformation");
   factory.registerNodeType<CheckInEnemyFortZone>("CheckInEnemyFortZone");
   factory.registerNodeType<CheckEnemyDefenseHealthDrop>("CheckEnemyDefenseHealthDrop");
   factory.registerNodeType<CheckManualStanceOverride>("CheckManualStanceOverride");
@@ -97,7 +95,6 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<DescendStairsAction>("DescendStairsAction");
   factory.registerNodeType<AccumulateAmmoPurchase>("AccumulateAmmoPurchase");
   factory.registerNodeType<ChangeMapAction>("ChangeMapAction");
-  factory.registerNodeType<ControlThroughTunnel>("ControlThroughTunnel");
   factory.registerNodeType<EmergencyStop>("EmergencyStop");
 
   factory.registerNodeType<NavigateToPoseAction>("NavigateToPose", node, zones);
@@ -112,11 +109,10 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<RequestRemoteAmmoExchangeAction>("RequestRemoteAmmoExchangeAction");
   factory.registerNodeType<RequestRemoteHealthExchangeAction>("RequestRemoteHealthExchangeAction");
 
-  factory.registerNodeType<SetGyroState>("SetGyroState");
+  factory.registerNodeType<SetSpinState>("SetSpinState");
   factory.registerNodeType<SetDesiredStance>("SetDesiredStance");
   factory.registerNodeType<SetSuperCap>("SetSuperCap");
   factory.registerNodeType<ChangeStance>("ChangeStance");
-  factory.registerNodeType<TunnelGyroAlignAction>("TunnelGyroAlignAction");
   factory.registerNodeType<UpdateStanceDuration>("UpdateStanceDuration");
   factory.registerNodeType<ApplyManualStanceOverride>("ApplyManualStanceOverride");
 
@@ -124,7 +120,6 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<SetGimbalPose>("SetGimbalPose");
   factory.registerNodeType<SetEnergyAim>("SetEnergyAim");
   factory.registerNodeType<SetGimbalPoseByAreaAction>("SetGimbalPoseByAreaAction", zones);
-  factory.registerNodeType<TunnelTimeoutBackoutAction>("TunnelTimeoutBackoutAction");
 }
 
 
