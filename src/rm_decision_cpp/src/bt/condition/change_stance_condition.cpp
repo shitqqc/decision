@@ -1,5 +1,6 @@
 #include "rm_decision/bt/condition/change_stance_condition.hpp"
 #include "rm_decision/domain/blackboard_keys.hpp"
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <cmath>
 #include <cstdint>
 namespace rm_decision
@@ -47,7 +48,6 @@ CheckOutpostTarget::CheckOutpostTarget(const std::string & n, const BT::NodeConf
     : ConditionNode(n, c)
 {
 }
-
 BT::PortsList CheckOutpostTarget::providedPorts()
 {
     return {
@@ -55,7 +55,6 @@ BT::PortsList CheckOutpostTarget::providedPorts()
         BT::InputPort<bool>("require_pitch_up", false, ""),
     };
 }
-
 BT::NodeStatus CheckOutpostTarget::tick()
 {
     (void)getInput<double>("goal_distance_threshold");
@@ -140,16 +139,44 @@ BT::NodeStatus CheckTargetDistance::tick()
                                                        : BT::NodeStatus::FAILURE;
 }
 
-CheckCrossZoneTransition::CheckCrossZoneTransition(const std::string & n, const BT::NodeConfig & c)
-    : ConditionNode(n, c)
+CheckCrossZoneTransition::CheckCrossZoneTransition(
+    const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
+    : ConditionNode(n, c), zones_(z)
 {
 }
 BT::NodeStatus CheckCrossZoneTransition::tick()
 {
-    // TODO(bit-port): tunnel transform zone
-    bool in_tunnel = false;
-    (void)config().blackboard->get(BbKey::kCurrentInTunnel, in_tunnel);
-    return in_tunnel ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+    double x = 0, y = 0;
+    geometry_msgs::msg::PoseStamped nav_goal;
+    bool through_tunnel = false;
+    (void)config().blackboard->get(BbKey::kCurrentPoseX, x);
+    (void)config().blackboard->get(BbKey::kCurrentPoseY, y);
+    (void)config().blackboard->get(BbKey::kNavGoal, nav_goal);
+    (void)config().blackboard->get(BbKey::kThroughTunnel, through_tunnel);
+
+    const Point2d_s pt{x, y, 0.0};
+    const Point2d_s goal_pt{nav_goal.pose.position.x, nav_goal.pose.position.y, 0.0};
+    const bool in_highland =
+        zones_ && zones_->inZone("highland", pt.x, pt.y);
+    const bool in_own =
+        zones_ && zones_->inZone("own_defense", pt.x, pt.y);
+    const bool in_enemy =
+        zones_ && zones_->inZone("enemy_defense", pt.x, pt.y);
+    const bool goal_in_highland =
+        zones_ && zones_->inZone("highland", goal_pt.x, goal_pt.y);
+    const bool goal_in_own =
+        zones_ && zones_->inZone("own_defense", goal_pt.x, goal_pt.y);
+    const bool goal_in_enemy =
+        zones_ && zones_->inZone("enemy_defense", goal_pt.x, goal_pt.y);
+    const bool in_named = in_highland || in_own || in_enemy;
+    const bool goal_in_named = goal_in_highland || goal_in_own || goal_in_enemy;
+    const bool same_zone = (in_highland && goal_in_highland) ||
+                           (in_own && goal_in_own) ||
+                           (in_enemy && goal_in_enemy) ||
+                           (!in_named && !goal_in_named);
+    const bool need_cross_zone = !same_zone;
+    const bool in_transform_zone = need_cross_zone || through_tunnel;
+    return in_transform_zone ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
 CheckCapacitorCapacity::CheckCapacitorCapacity(const std::string & n, const BT::NodeConfig & c)
@@ -175,22 +202,6 @@ BT::NodeStatus CheckCapacitorCapacity::tick()
     (void)config().blackboard->get(BbKey::kCapacitorCapacity, cap);
     const bool ok = (mode == "less") ? (cap < thr) : (cap >= thr);
     return ok ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-}
-
-CheckStanceCooldown::CheckStanceCooldown(const std::string & n, const BT::NodeConfig & c)
-    : ConditionNode(n, c)
-{
-}
-BT::PortsList CheckStanceCooldown::providedPorts()
-{
-    return {
-        BT::InputPort<std::string>("stance", "ATTACK", ""),
-        BT::InputPort<double>("cooldown", 0.0, "")};
-}
-BT::NodeStatus CheckStanceCooldown::tick()
-{
-    // Simplified: always allow
-    return BT::NodeStatus::SUCCESS;
 }
 
 CheckStanceEffectLimit::CheckStanceEffectLimit(const std::string & n, const BT::NodeConfig & c)
@@ -247,18 +258,6 @@ BT::NodeStatus CheckStanceRefreshRequired::tick()
         name = "ENHANCED_MOVE";
     setOutput("target_stance", name);
     return BT::NodeStatus::SUCCESS;
-}
-
-CheckTunnelDeformation::CheckTunnelDeformation(const std::string & n, const BT::NodeConfig & c)
-    : ConditionNode(n, c)
-{
-}
-BT::NodeStatus CheckTunnelDeformation::tick()
-{
-    // TODO(bit-port): lifter / tunnel prepare
-    bool through = false;
-    (void)config().blackboard->get(BbKey::kThroughTunnel, through);
-    return through ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
 CheckInEnemyFortZone::CheckInEnemyFortZone(const std::string & n, const BT::NodeConfig & c)

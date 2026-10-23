@@ -10,5 +10,6 @@
     sentry_cmd_topic: "sentry_cmd"
     use_spin_topic: "/nav/use_spin"
     energy_aim_topic: "energy_aim_mode"
+    through_tunnel_topic: "/through_tunnel"
     # empty = share/rm_decision_cpp/config/zones.yaml
     zones_yaml: ""

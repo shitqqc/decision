@@ -306,7 +306,7 @@
     </div>
   </div>
   <script>
-    const TREE_ORDER = ["resource", "tactical", "nav", "stance", "gimbal"];
+    const TREE_ORDER = ["resource", "tactical", "nav", "stance", "gimbal", "test"];
     const BOX_W = 150;
     const BOX_H = 56;
     const H_GAP = 36;
@@ -471,7 +471,13 @@
       b.dataset.tree = name;
       if (name === activeTree) b.classList.add("active");
       b.onclick = () => {
+        const sourceChanged = (activeTree === "test") !== (name === "test");
         activeTree = name;
+        if (sourceChanged) {
+          latest = null;
+          firstData = true;
+          renderBb();
+        }
         selectedUid = null;
         selectedUids = new Set();
         [...tabsEl.children].forEach((c) =>
@@ -481,6 +487,7 @@
         rebuildGraph(false);
         applyViewportTransform();
         if (!view().fitted) fitToView();
+        if (sourceChanged) poll();
       };
       tabsEl.appendChild(b);
     });
@@ -1237,9 +1244,23 @@
         if (!layoutHydrated) {
           await hydrateLayouts();
         }
-        const r = await fetch("/api/snapshot?t=" + Date.now());
+        const testSource = activeTree === "test";
+        const endpoint = testSource ? "/api/test/snapshot" : "/api/snapshot";
+        const r = await fetch(endpoint + "?t=" + Date.now());
         if (!r.ok) throw new Error("http " + r.status);
-        latest = await r.json();
+        const snapshot = await r.json();
+        if (testSource !== (activeTree === "test")) return;
+        latest = snapshot;
+        if (testSource && !latest.trees?.test?.root) {
+          firstData = true;
+          viewport.innerHTML = "";
+          renderBb();
+          document.getElementById("meta").textContent = "等待测试树快照 …";
+          return;
+        }
+        if (testSource && view().structureKey !== structureKey(latest.trees.test.root)) {
+          firstData = true;
+        }
         document.getElementById("meta").textContent =
           "已连接 · stamp=" +
           (latest.stamp_ms || "-") +

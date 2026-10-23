@@ -7,10 +7,10 @@
 namespace rm_decision
 {
 
-class SetGyroState : public BT::SyncActionNode
+class SetSpinState : public BT::SyncActionNode
 {
 public:
-  SetGyroState(const std::string & _name, const BT::NodeConfig & _config);
+  SetSpinState(const std::string & _name, const BT::NodeConfig & _config);
   static BT::PortsList providedPorts();
   BT::NodeStatus tick() override;
 };
@@ -39,14 +39,9 @@ public:
   BT::NodeStatus onStart() override;
   BT::NodeStatus onRunning() override;
   void onHalted() override {}
-};
 
-class TunnelGyroAlignAction : public BT::SyncActionNode
-{
-public:
-  TunnelGyroAlignAction(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+private:
+  double last_change_sec_{-1.0e9};
 };
 
 class UpdateStanceDuration : public BT::SyncActionNode

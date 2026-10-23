@@ -26,6 +26,8 @@ base:
     x: 5.0
     y: 5.0
     yaw: 0.0
+  through_tunnel:
+    data: false
 scenarios:
   normal:
     game_info:
@@ -89,7 +91,5 @@ scenarios:
       x: 2.5
       y: 2.0
 current:
-  scenario: attack_fort
-  overrides:
-    game_info:
-      control_mode: 1
+  scenario: normal
+  overrides: {}

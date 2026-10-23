@@ -1,5 +1,6 @@
 #include "rm_decision/bt/action/change_stance_action.hpp"
 #include "rm_decision/domain/blackboard_keys.hpp"
+#include <chrono>
 #include <cstdint>
 
 namespace rm_decision
@@ -20,24 +21,19 @@ static std::uint8_t parseStance(const std::string & s)
     return static_cast<std::uint8_t>(StanceCmd_e::Move);
 }
 
-SetGyroState::SetGyroState(const std::string & n, const BT::NodeConfig & c) : SyncActionNode(n, c)
+SetSpinState::SetSpinState(const std::string & n, const BT::NodeConfig & c) : SyncActionNode(n, c)
 {
 }
-BT::PortsList SetGyroState::providedPorts()
+BT::PortsList SetSpinState::providedPorts()
 {
     return {
-        BT::InputPort<bool>("use_gyro", false, ""),
-        BT::InputPort<float>("gyro_vel", 0.f, ""),
-        BT::InputPort<bool>("random_speed", false, ""),
-        BT::InputPort<float>("change_speed_duration", 0.f, ""),
+        BT::InputPort<bool>("use_spin", false, "")
     };
 }
-BT::NodeStatus SetGyroState::tick()
+BT::NodeStatus SetSpinState::tick()
 {
     bool use = false;
-    (void)getInput("use_gyro", use);
-    (void)getInput<float>("gyro_vel");
-    (void)getInput<bool>("random_speed");
+    (void)getInput("use_spin", use);
     config().blackboard->set(BbKey::kUseSpin, use);
     return BT::NodeStatus::SUCCESS;
 }
@@ -74,13 +70,23 @@ ChangeStance::ChangeStance(const std::string & n, const BT::NodeConfig & c)
 }
 BT::PortsList ChangeStance::providedPorts()
 {
-    return {BT::InputPort<std::string>("stance", "MOVE", "")};
+    return {
+        BT::InputPort<std::string>("stance", "MOVE", ""),
+        BT::InputPort<double>("cooldown", 5.0, "")};
 }
 BT::NodeStatus ChangeStance::onStart()
 {
+    double cd = 5.0;
+    (void)getInput("cooldown", cd);
+    const auto now = std::chrono::steady_clock::now().time_since_epoch();
+    const double t = std::chrono::duration_cast<std::chrono::duration<double>>(now).count();
+    if (last_change_sec_ > 0.0 && (t - last_change_sec_) < cd)
+        return BT::NodeStatus::SUCCESS;
+
     std::string s = "MOVE";
     (void)getInput("stance", s);
     config().blackboard->set(BbKey::kDesiredStance, parseStance(s));
+    last_change_sec_ = t;
     return BT::NodeStatus::RUNNING;
 }
 BT::NodeStatus ChangeStance::onRunning()
@@ -100,41 +106,19 @@ BT::NodeStatus ChangeStance::onRunning()
     return BT::NodeStatus::RUNNING;
 }
 
-TunnelGyroAlignAction::TunnelGyroAlignAction(const std::string & n, const BT::NodeConfig & c)
-    : SyncActionNode(n, c)
-{
-}
-BT::PortsList TunnelGyroAlignAction::providedPorts()
-{
-    return {
-        BT::InputPort<float>("angle_deg", 0.f, ""),
-        BT::InputPort<bool>("reuse_existing_target", false, ""),
-    };
-}
-BT::NodeStatus TunnelGyroAlignAction::tick()
-{
-    // TODO(bit-port): chassis tunnel yaw alignment egress
-    float ang = 0.f;
-    (void)getInput("angle_deg", ang);
-    config().blackboard->set(BbKey::kTunnelAlignActive, true);
-    (void)ang;
-    return BT::NodeStatus::FAILURE;
-}
-
 UpdateStanceDuration::UpdateStanceDuration(const std::string & n, const BT::NodeConfig & c)
     : SyncActionNode(n, c)
 {
 }
 BT::NodeStatus UpdateStanceDuration::tick() 
 { 
-    auto blackboard = config().blackboard;
     int current_time = 0;
     std::uint8_t game_progress = 0;
-    (void)blackboard->get(BbKey::kGameTimeRemaining, current_time);
-    (void)blackboard->get(BbKey::kGameProgress, game_progress);
-    constexpr int kMaxGameTime = 120;
+    (void)config().blackboard->get(BbKey::kGameTimeRemaining, current_time);
+    (void)config().blackboard->get(BbKey::kGameProgress, game_progress);
+    const int max_game_time = 120;
     const bool game_active =
-        (game_progress == 4) || (current_time > 0 && current_time <= kMaxGameTime);
+        (game_progress == 4) || (current_time > 0 && current_time <= max_game_time);
     if (last_game_time_ < 0) {
         last_game_time_ = current_time;
         return BT::NodeStatus::SUCCESS;
@@ -146,30 +130,30 @@ BT::NodeStatus UpdateStanceDuration::tick()
 
     const int raw_delta = last_game_time_ - current_time;
     last_game_time_ = current_time;
-    constexpr int kMaxReasonableDelta = 5;
-    if (raw_delta <= 0 || raw_delta > kMaxReasonableDelta) {
+    const int max_delta = 5;
+    if (raw_delta <= 0 || raw_delta > max_delta) {
         return BT::NodeStatus::SUCCESS;
     }
-    
+
     std::uint8_t current_stance = 0;
-    (void)blackboard->get(BbKey::kCurrentStance, current_stance);
+    (void)config().blackboard->get(BbKey::kCurrentStance, current_stance);
     switch (current_stance) {
     case static_cast<std::uint8_t>(StanceCmd_e::Attack):
     case static_cast<std::uint8_t>(StanceCmd_e::EnhancedAttack): {
         float value = 0.0f;
-        (void)blackboard->get(BbKey::kEnhancedAttackRemaining, value);
+        (void)config().blackboard->get(BbKey::kEnhancedAttackRemaining, value);
         break;
     }
     case static_cast<std::uint8_t>(StanceCmd_e::Defend):
     case static_cast<std::uint8_t>(StanceCmd_e::EnhancedDefend): {
         float value = 0.0f;
-        (void)blackboard->get(BbKey::kEnhancedDefendRemaining, value);
+        (void)config().blackboard->get(BbKey::kEnhancedDefendRemaining, value);
         break;
     }
     case static_cast<std::uint8_t>(StanceCmd_e::Move):
     case static_cast<std::uint8_t>(StanceCmd_e::EnhancedMove): {
         float value = 0.0f;
-        (void)blackboard->get(BbKey::kEnhancedMoveRemaining, value);
+        (void)config().blackboard->get(BbKey::kEnhancedMoveRemaining, value);
         break;
     }
     default:

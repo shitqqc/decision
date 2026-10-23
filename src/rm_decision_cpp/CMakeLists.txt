@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.12)
 project(rm_decision_cpp)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -38,6 +38,7 @@ set(ros_dependencies
 set(DECISION_SOURCES
   src/infrastructure/game_info_referee_ingress.cpp
   src/infrastructure/odom_pose_ingress.cpp
+  src/infrastructure/through_tunnel_ingress.cpp
   src/infrastructure/sentry_cmd_egress.cpp
   src/infrastructure/bt_snapshot_publisher.cpp
   src/infrastructure/bt_status_latch.cpp
@@ -77,15 +78,9 @@ install(TARGETS ${PROJECT_NAME} tree_exec_node
 )
 
 install(DIRECTORY include/ DESTINATION include)
-install(DIRECTORY tree config launch web DESTINATION share/${PROJECT_NAME})
-install(PROGRAMS
-  scripts/bt_monitor_web.py
-  scripts/mock_decision_pub.py
-  scripts/decision_test_node.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-install(FILES scripts/decision_test_web.py
-  DESTINATION lib/${PROJECT_NAME})
+install(DIRECTORY tree config launch DESTINATION share/${PROJECT_NAME})
+
+add_subdirectory(test)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

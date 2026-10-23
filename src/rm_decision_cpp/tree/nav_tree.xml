@@ -42,9 +42,9 @@
       </ForceSuccess>
      
       <ReactiveFallback name="NavPriorityRoot">
-        <SubTree ID="TunnelRecoverySubTree"
+        <!-- <SubTree ID="TunnelRecoverySubTree"
                  __shared_blackboard="true"
-                 __autoremap="true" />
+                 __autoremap="true" /> -->
 
         <!-- 前哨专项撤退一旦触发就保持高优先级；回血至上限且5秒防御结束后退出。 -->
         <ReactiveSequence name="Priority0OutpostHealthRecovery">

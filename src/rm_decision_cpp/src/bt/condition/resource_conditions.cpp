@@ -170,16 +170,7 @@ BT::NodeStatus CheckRemoteExchangeCooldown::tick()
     (void)getInput("max_count", max_count);
     if (!getInput("exchange_count_key", key))
         (void)getInput("count_key", key);
-
     (void)getInput<double>("cooldown_seconds");
-    double cd = 5.0;
-    if (!getInput("cooldown_seconds", cd))
-        (void)getInput("cooldown_sec", cd);
-    const double t = nowSec();
-    if (last_exchange_sec_ > 0 && (t - last_exchange_sec_) < cd)
-        return BT::NodeStatus::FAILURE;
-    last_exchange_sec_ = t;
-
     int count = 0;
     (void)config().blackboard->get(key, count);
     return count < max_count ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;

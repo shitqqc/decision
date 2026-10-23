@@ -5,3 +5,4 @@ install
 bag
 temp
 __pycache__
+/.mcp.json

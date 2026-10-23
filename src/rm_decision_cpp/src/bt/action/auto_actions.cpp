@@ -232,18 +232,6 @@ BT::NodeStatus ChangeMapAction::tick()
     return BT::NodeStatus::FAILURE;
 }
 
-ControlThroughTunnel::ControlThroughTunnel(const std::string & n, const BT::NodeConfig & c)
-    : StatefulActionNode(n, c)
-{
-}
-BT::PortsList ControlThroughTunnel::providedPorts() { return {}; }
-BT::NodeStatus ControlThroughTunnel::onStart()
-{
-    // TODO(bit-port): controller_server params + tunnel FSM
-    return BT::NodeStatus::FAILURE;
-}
-BT::NodeStatus ControlThroughTunnel::onRunning() { return BT::NodeStatus::FAILURE; }
-
 EmergencyStop::EmergencyStop(const std::string & n, const BT::NodeConfig & c) : SyncActionNode(n, c)
 {
 }

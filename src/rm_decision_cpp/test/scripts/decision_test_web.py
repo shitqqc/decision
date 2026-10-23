@@ -28,14 +28,11 @@ class TestWebBridge:
 
     # 调用测试节点服务
     def call(self, client, request): 
-        # 等待服务可用
         if not client.wait_for_service(timeout_sec=1.0):
             raise RuntimeError("Test node is offline")
-        # 执行异步请求
         done = threading.Event()
         future = client.call_async(request)
         future.add_done_callback(lambda result: done.set())
-        # 等待服务调用完成
         if not done.wait(3.0):
             raise RuntimeError("Test node request timed out")
         response = future.result()

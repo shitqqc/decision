@@ -2,7 +2,6 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="StanceTree">
     <ReactiveSequence name="StanceTreeRoot">
-      <CheckTunnelDeformation />
       <UpdateStanceDuration />
       
       <ReactiveFallback name="StancePriorityRoot">
@@ -10,14 +9,12 @@
           <CheckTacticalModeCondition mode="attack" />
           <CheckCrossZoneTransition />
           <ChangeStance name="ChangeStanceManualAttackTunnelDefend" stance="DEFEND" />
-          <TunnelGyroAlignAction />
           <!-- <CheckStanceCooldown cooldown="5.0" /> -->
         </ReactiveSequence>
 
         <ReactiveSequence name="MoveStanceNoGyroBranch">
           <CheckCrossZoneTransition />
           <ChangeStance name="ChangeStanceMoveNoGyro" stance="MOVE" />
-          <TunnelGyroAlignAction />
           <!-- <CheckStanceCooldown cooldown="5.0" /> -->
         </ReactiveSequence>
 
@@ -81,9 +78,7 @@
             <Sequence name="ArrivedEnemyFortHurtEnhancedDefend">
               <CheckTacticalModeCondition mode="attack" />
               <CheckInEnemyFortZone />
-              <SetGyroState use_gyro="true"
-                            gyro_vel="80.0"
-                            random_speed="false" />
+              <SetSpinState use_spin="true" />
               <ChangeStance name="ChangeStanceArrivedEnemyFortHurtEnhancedDefend"
                             stance="ENHANCED_DEFEND" />
             </Sequence>
@@ -91,9 +86,7 @@
               <Inverter>
                 <CheckTacticalModeCondition mode="attack" />
               </Inverter>
-              <SetGyroState use_gyro="true"
-                            gyro_vel="80.0"
-                            random_speed="false" />
+              <SetSpinState use_spin="true" />
               <ChangeStance name="ChangeStanceEnemyAreaHurtEnhancedDefend"
                             stance="ENHANCED_DEFEND" />
             </Sequence>
@@ -105,9 +98,7 @@
           <ReactiveFallback name="EnemyFortStanceSelector">
             <Sequence name="ArrivedEnemyFortDefendGyro">
               <CheckInEnemyFortZone />
-              <SetGyroState use_gyro="true"
-                            gyro_vel="80.0"
-                            random_speed="false" />
+              <SetSpinState use_spin="true" />
               <Fallback name="FortDefendStanceSelector">
                 <Sequence name="TryEnhancedDefend">
                   <CheckShouldEnhanceStance
@@ -124,9 +115,7 @@
               <Inverter>
                 <CheckInEnemyFortZone />
               </Inverter>
-              <SetGyroState use_gyro="false"
-                            gyro_vel="0.0"
-                            random_speed="false" />
+              <SetSpinState use_spin="false" />
               <Fallback name="FortMoveStanceSelector">
                 <Sequence name="TryEnhancedMove">
                   <CheckShouldEnhanceStance
@@ -138,9 +127,6 @@
                 </Sequence>
                 <ChangeStance name="ChangeStanceApproachEnemyFortMove" stance="MOVE" />
               </Fallback>
-              <!-- 复用过洞分支已选定的航向目标,持续对齐直到该分支被 halt。 -->
-              <TunnelGyroAlignAction
-                                     reuse_existing_target="true" />
             </Sequence>
           </ReactiveFallback>
         </ReactiveSequence>
@@ -150,9 +136,7 @@
           <Sequence name="OutpostEnhancedAttackBranch">
             <CheckOutpostTarget goal_distance_threshold="0.5"
                                 require_pitch_up="true" />
-            <SetGyroState use_gyro="true"
-                          gyro_vel="40.0"
-                          random_speed="false" />
+            <SetSpinState use_spin="true" />
             <Fallback name="OutpostAttackStanceSelector">
               <Sequence name="TryOutpostEnhancedAttack">
                 <CheckEngagedStatus expected="true" />
@@ -171,9 +155,7 @@
           <Sequence name="HeatAttackBranch">
             <CheckHeat threshold="200" mode="greater" />
             <!-- <CheckStanceEffectLimit target_stance="ATTACK" max_time_sec="180" /> -->
-            <SetGyroState use_gyro="true"
-                          gyro_vel="40.0"
-                          random_speed="false" />
+            <SetSpinState use_spin="true" />
             <!-- <CheckStanceCooldown cooldown="5.0" /> -->
             <Fallback name="AbsoluteAttackStanceSelector">
               <Sequence name="TryEnhancedAttack">
@@ -193,9 +175,7 @@
           <CheckEngagedStatus expected="true" />
           <CheckHealth threshold="50" mode="greater" />
           <!-- <CheckStanceEffectLimit target_stance="ATTACK" max_time_sec="180" /> -->
-          <SetGyroState use_gyro="true"
-                        gyro_vel="80.0"
-                        random_speed="false" />
+          <SetSpinState use_spin="true" />
           <!-- <CheckStanceCooldown cooldown="5.0" /> -->
           <Fallback name="CombatAttackStanceSelector">
             <Sequence name="TryEnhancedAttack">
@@ -214,9 +194,7 @@
           <CheckEngagedStatus expected="true" />
           <CheckHealth threshold="50" mode="less" />
           <!-- <CheckStanceEffectLimit target_stance="DEFEND" max_time_sec="180" /> -->
-          <SetGyroState use_gyro="true"
-                        gyro_vel="80.0"
-                        random_speed="false" />
+          <SetSpinState use_spin="true" />
           <!-- <CheckStanceCooldown cooldown="5.0" /> -->
           <Fallback name="DefendStanceSelector">
             <Sequence name="TryEnhancedDefend">
@@ -236,9 +214,7 @@
             <CheckCapacitorCapacity threshold="30" mode="less" />
             <CheckEngagedStatus expected="false" />
           </Fallback>
-          <SetGyroState use_gyro="true"
-                        gyro_vel="40.0"
-                        random_speed="false" />
+          <SetSpinState use_spin="true" />
           <!-- <CheckStanceCooldown cooldown="5.0" /> -->
           <Fallback name="MoveStanceSelector">
             <Sequence name="TryEnhancedMove">
@@ -260,9 +236,7 @@
         </Sequence>
         
         <Sequence name="DefaultDefendBranch">
-          <SetGyroState use_gyro="true"
-                        gyro_vel="80.0"
-                        random_speed="false" />
+          <SetSpinState use_spin="true" />
           <!-- <CheckStanceCooldown cooldown="5.0" /> -->
           <Fallback name="DefaultDefendStanceSelector">
             <Sequence name="TryEnhancedDefend">
