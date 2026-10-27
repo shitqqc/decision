@@ -108,6 +108,7 @@ BT::NodeStatus CheckEnemyAreaRecentlyHurt::tick()
                                                     : BT::NodeStatus::FAILURE;
 }
 
+/*
 CheckTargetDistance::CheckTargetDistance(const std::string & n, const BT::NodeConfig & c)
     : ConditionNode(n, c)
 {
@@ -138,46 +139,44 @@ BT::NodeStatus CheckTargetDistance::tick()
     return (mode == "greater" ? d > max_d : d < max_d) ? BT::NodeStatus::SUCCESS
                                                        : BT::NodeStatus::FAILURE;
 }
+*/
 
-CheckCrossZoneTransition::CheckCrossZoneTransition(
-    const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
-    : ConditionNode(n, c), zones_(z)
-{
-}
-BT::NodeStatus CheckCrossZoneTransition::tick()
-{
-    double x = 0, y = 0;
-    geometry_msgs::msg::PoseStamped nav_goal;
-    bool through_tunnel = false;
-    (void)config().blackboard->get(BbKey::kCurrentPoseX, x);
-    (void)config().blackboard->get(BbKey::kCurrentPoseY, y);
-    (void)config().blackboard->get(BbKey::kNavGoal, nav_goal);
-    (void)config().blackboard->get(BbKey::kThroughTunnel, through_tunnel);
+// CheckCrossZoneTransition::CheckCrossZoneTransition(
+//     const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
+//     : ConditionNode(n, c) , zones_(z)
+// {
+//     (void)z;
+// }
+// BT::NodeStatus CheckCrossZoneTransition::tick()
+// {
+//     double x = 0, y = 0;
+//     geometry_msgs::msg::PoseStamped nav_goal;
+//     bool through_tunnel = false;
+//     (void)config().blackboard->get(BbKey::kCurrentPoseX, x);
+//     (void)config().blackboard->get(BbKey::kCurrentPoseY, y);
+//     (void)config().blackboard->get(BbKey::kNavGoal, nav_goal);
+//     (void)config().blackboard->get(BbKey::kThroughTunnel, through_tunnel);
 
-    const Point2d_s pt{x, y, 0.0};
-    const Point2d_s goal_pt{nav_goal.pose.position.x, nav_goal.pose.position.y, 0.0};
-    const bool in_highland =
-        zones_ && zones_->inZone("highland", pt.x, pt.y);
-    const bool in_own =
-        zones_ && zones_->inZone("own_defense", pt.x, pt.y);
-    const bool in_enemy =
-        zones_ && zones_->inZone("enemy_defense", pt.x, pt.y);
-    const bool goal_in_highland =
-        zones_ && zones_->inZone("highland", goal_pt.x, goal_pt.y);
-    const bool goal_in_own =
-        zones_ && zones_->inZone("own_defense", goal_pt.x, goal_pt.y);
-    const bool goal_in_enemy =
-        zones_ && zones_->inZone("enemy_defense", goal_pt.x, goal_pt.y);
-    const bool in_named = in_highland || in_own || in_enemy;
-    const bool goal_in_named = goal_in_highland || goal_in_own || goal_in_enemy;
-    const bool same_zone = (in_highland && goal_in_highland) ||
-                           (in_own && goal_in_own) ||
-                           (in_enemy && goal_in_enemy) ||
-                           (!in_named && !goal_in_named);
-    const bool need_cross_zone = !same_zone;
-    const bool in_transform_zone = need_cross_zone || through_tunnel;
-    return in_transform_zone ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-}
+//     const Point2d_s pt{x, y, 0.0};
+//     const Point2d_s goal_pt{nav_goal.pose.position.x, nav_goal.pose.position.y, 0.0};
+//     (void)pt;
+//     (void)goal_pt;
+//     const bool in_highland = false; zones_ && zones_->inZone("highland", pt.x, pt.y);
+//     const bool in_own = false; zones_ && zones_->inZone("own_defense", pt.x, pt.y);
+//     const bool in_enemy = false; zones_ && zones_->inZone("enemy_defense", pt.x, pt.y);
+//     const bool goal_in_highland = false; zones_ && zones_->inZone("highland", goal_pt.x, goal_pt.y);
+//     const bool goal_in_own = false; zones_ && zones_->inZone("own_defense", goal_pt.x, goal_pt.y);
+//     const bool goal_in_enemy = false; zones_ && zones_->inZone("enemy_defense", goal_pt.x, goal_pt.y);
+//     const bool in_named = in_highland || in_own || in_enemy;
+//     const bool goal_in_named = goal_in_highland || goal_in_own || goal_in_enemy;
+//     const bool same_zone = (in_highland && goal_in_highland) ||
+//                            (in_own && goal_in_own) ||
+//                            (in_enemy && goal_in_enemy) ||
+//                            (!in_named && !goal_in_named);
+//     const bool need_cross_zone = !same_zone;
+//     const bool in_transform_zone = need_cross_zone || through_tunnel;
+//     return in_transform_zone ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+// }
 
 CheckCapacitorCapacity::CheckCapacitorCapacity(const std::string & n, const BT::NodeConfig & c)
     : ConditionNode(n, c)
@@ -260,6 +259,7 @@ BT::NodeStatus CheckStanceRefreshRequired::tick()
     return BT::NodeStatus::SUCCESS;
 }
 
+/* 
 CheckInEnemyFortZone::CheckInEnemyFortZone(const std::string & n, const BT::NodeConfig & c)
     : ConditionNode(n, c)
 {
@@ -270,6 +270,7 @@ BT::NodeStatus CheckInEnemyFortZone::tick()
     (void)config().blackboard->get(BbKey::kInEnemyFortZone, v);
     return v ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
+*/
 
 CheckEnemyDefenseHealthDrop::CheckEnemyDefenseHealthDrop(const std::string & n, const BT::NodeConfig & c)
     : ConditionNode(n, c)

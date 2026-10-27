@@ -11,5 +11,6 @@
     use_spin_topic: "/nav/use_spin"
     energy_aim_topic: "energy_aim_mode"
     through_tunnel_topic: "/through_tunnel"
+    gimbal_pose_topic: "/nav/gimbal_pose"
     # empty = share/rm_decision_cpp/config/zones.yaml
     zones_yaml: ""

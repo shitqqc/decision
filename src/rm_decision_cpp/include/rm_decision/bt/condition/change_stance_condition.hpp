@@ -55,25 +55,25 @@ public:
   BT::NodeStatus tick() override;
 };
 
-class CheckTargetDistance : public BT::ConditionNode
-{
-public:
-  CheckTargetDistance(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
-};
+// class CheckTargetDistance : public BT::ConditionNode
+// {
+// public:
+//   CheckTargetDistance(const std::string & _name, const BT::NodeConfig & _config);
+//   static BT::PortsList providedPorts();
+//   BT::NodeStatus tick() override;
+// };
 
-class CheckCrossZoneTransition : public BT::ConditionNode
-{
-public:
-  CheckCrossZoneTransition(
-    const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
-  static BT::PortsList providedPorts() { return {}; }
-  BT::NodeStatus tick() override;
+// class CheckCrossZoneTransition : public BT::ConditionNode
+// {
+// public:
+//   CheckCrossZoneTransition(
+//     const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
+//   static BT::PortsList providedPorts() { return {}; }
+//   BT::NodeStatus tick() override;
 
-private:
-  const ZoneMap * zones_;
-};
+// private:
+//   const ZoneMap * zones_;
+// };
 
 class CheckCapacitorCapacity : public BT::ConditionNode
 {
@@ -99,13 +99,13 @@ public:
   BT::NodeStatus tick() override;
 };
 
-class CheckInEnemyFortZone : public BT::ConditionNode
-{
-public:
-  CheckInEnemyFortZone(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts() { return {}; }
-  BT::NodeStatus tick() override;
-};
+// class CheckInEnemyFortZone : public BT::ConditionNode
+// {
+// public:
+//   CheckInEnemyFortZone(const std::string & _name, const BT::NodeConfig & _config);
+//   static BT::PortsList providedPorts() { return {}; }
+//   BT::NodeStatus tick() override;
+// };
 
 class CheckEnemyDefenseHealthDrop : public BT::ConditionNode
 {

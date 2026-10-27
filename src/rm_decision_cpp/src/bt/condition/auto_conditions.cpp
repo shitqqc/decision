@@ -93,23 +93,6 @@ BT::NodeStatus CheckManualControl::tick()
                                                                  : BT::NodeStatus::FAILURE;
 }
 
-CheckManualFortAttack::CheckManualFortAttack(
-    const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
-    : ConditionNode(n, c), zones_(z)
-{
-}
-BT::NodeStatus CheckManualFortAttack::tick()
-{
-    std::uint8_t m = 0;
-    (void)config().blackboard->get(BbKey::kControlMode, m);
-    if (m != static_cast<std::uint8_t>(ControlMode_e::Manual) || !zones_)
-        return BT::NodeStatus::FAILURE;
-    double x = 0, y = 0;
-    (void)config().blackboard->get(BbKey::kManualGoalX, x);
-    (void)config().blackboard->get(BbKey::kManualGoalY, y);
-    return zones_->inZone("enemy_fort", x, y) ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-}
-
 CheckTacticalMode::CheckTacticalMode(const std::string & n, const BT::NodeConfig & c)
     : ConditionNode(n, c)
 {
@@ -445,19 +428,6 @@ BT::NodeStatus CheckOutpostSafeResponse::tick()
     return hp >= min_hp ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
-CheckTargetLocked::CheckTargetLocked(const std::string & n, const BT::NodeConfig & c)
-    : ConditionNode(n, c)
-{
-}
-BT::NodeStatus CheckTargetLocked::tick()
-{
-    bool v = false;
-    (void)config().blackboard->get(BbKey::kTargetValid, v);
-    if (!v)
-        config().blackboard->set(BbKey::kNotAimEnemy, true);
-    return v ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-}
-
 CheckTargetArmorId::CheckTargetArmorId(const std::string & n, const BT::NodeConfig & c)
     : ConditionNode(n, c)
 {
@@ -476,30 +446,31 @@ BT::NodeStatus CheckTargetArmorId::tick()
     return id == want ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
-CheckInStairsZone::CheckInStairsZone(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
-    : ConditionNode(n, c), zones_(z)
-{
-}
-BT::PortsList CheckInStairsZone::providedPorts()
-{
-    return {BT::InputPort<std::string>("zone_name", "stairs", "")};
-}
-BT::NodeStatus CheckInStairsZone::tick()
-{
-    if (!zones_)
-        return BT::NodeStatus::FAILURE;
+// CheckInStairsZone::CheckInStairsZone(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
+//     : ConditionNode(n, c) , zones_(z)
+// {
+// }
+// BT::PortsList CheckInStairsZone::providedPorts()
+// {
+//     return {BT::InputPort<std::string>("zone_name", "stairs", "")};
+// }
+// BT::NodeStatus CheckInStairsZone::tick()
+// {
+//     if (!zones_)
+//         return BT::NodeStatus::FAILURE;
 
-    std::string name = "stairs";
-    (void)getInput("zone_name", name);
-    bool pose_valid = false;
-    double x = 0, y = 0;
-    (void)config().blackboard->get(BbKey::kPoseValid, pose_valid);
-    (void)config().blackboard->get(BbKey::kCurrentPoseX, x);
-    (void)config().blackboard->get(BbKey::kCurrentPoseY, y);
-    if (!pose_valid)
-        return BT::NodeStatus::FAILURE;
-    return zones_->inZone(name, x, y) ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-}
+//     std::string name = "stairs";
+//     (void)getInput("zone_name", name);
+//     bool pose_valid = false;
+//     double x = 0, y = 0;
+//     (void)config().blackboard->get(BbKey::kPoseValid, pose_valid);
+//     (void)config().blackboard->get(BbKey::kCurrentPoseX, x);
+//     (void)config().blackboard->get(BbKey::kCurrentPoseY, y);
+//     if (!pose_valid)
+//         return BT::NodeStatus::FAILURE;
+//     return zones_->inZone(name, x, y) ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+//     return BT::NodeStatus::FAILURE;
+// }
 
 CheckNoAllyBelowStairs::CheckNoAllyBelowStairs(const std::string & n, const BT::NodeConfig & c)
     : ConditionNode(n, c)
@@ -511,27 +482,27 @@ BT::NodeStatus CheckNoAllyBelowStairs::tick()
     return BT::NodeStatus::SUCCESS;
 }
 
-CheckOwnFortIdle::CheckOwnFortIdle(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
-    : ConditionNode(n, c), zones_(z)
-{
-}
-BT::NodeStatus CheckOwnFortIdle::tick()
-{
-    if (!zones_)
-        return BT::NodeStatus::FAILURE;
-    bool pose_valid = false;
-    double x = 0, y = 0;
-    (void)config().blackboard->get(BbKey::kPoseValid, pose_valid);
-    (void)config().blackboard->get(BbKey::kCurrentPoseX, x);
-    (void)config().blackboard->get(BbKey::kCurrentPoseY, y);
-    if (!pose_valid)
-        return BT::NodeStatus::FAILURE;
-    // Approximate: near own fort nav point index 3
-    Point2d_s pt;
-    if (!zones_->getNavPoint(3, &pt))
-        return BT::NodeStatus::FAILURE;
-    const double dx = x - pt.x, dy = y - pt.y;
-    return (dx * dx + dy * dy) < 4.0 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-}
+// CheckOwnFortIdle::CheckOwnFortIdle(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
+//     : ConditionNode(n, c), zones_(z)
+// {
+// }
+// BT::NodeStatus CheckOwnFortIdle::tick()
+// {
+//     if (!zones_)
+//         return BT::NodeStatus::FAILURE;
+//     bool pose_valid = false;
+//     double x = 0, y = 0;
+//     (void)config().blackboard->get(BbKey::kPoseValid, pose_valid);
+//     (void)config().blackboard->get(BbKey::kCurrentPoseX, x);
+//     (void)config().blackboard->get(BbKey::kCurrentPoseY, y);
+//     if (!pose_valid)
+//         return BT::NodeStatus::FAILURE;
+//     // Approximate: near own fort nav point index 3
+//     Point2d_s pt;
+//     if (!zones_->getNavPoint(3, &pt))
+//         return BT::NodeStatus::FAILURE;
+//     const double dx = x - pt.x, dy = y - pt.y;
+//     return (dx * dx + dy * dy) < 4.0 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+// }
 
 } // namespace rm_decision

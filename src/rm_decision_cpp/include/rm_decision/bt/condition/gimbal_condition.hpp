@@ -17,16 +17,16 @@ public:
   BT::NodeStatus tick() override;
 };
 
-class CheckNearEnemyOutpost : public BT::ConditionNode
-{
-public:
-  CheckNearEnemyOutpost(
-    const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+// class CheckNearEnemyOutpost : public BT::ConditionNode
+// {
+// public:
+//   CheckNearEnemyOutpost(
+//     const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
+//   static BT::PortsList providedPorts();
+//   BT::NodeStatus tick() override;
 
-private:
-  const ZoneMap * zones_;
-};
+// private:
+//   const ZoneMap * zones_;
+// };
 
 }  // namespace rm_decision

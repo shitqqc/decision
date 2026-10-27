@@ -78,6 +78,7 @@ BT::NodeStatus CheckCanFreeResurrect::tick()
     return can ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
+/*
 CheckInZone::CheckInZone(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
     : ConditionNode(n, c), zones_(z)
 {
@@ -120,6 +121,7 @@ BT::NodeStatus CheckInZone::tick()
         
     return zones_->inZone(name, x, y) ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
+*/
 
 CheckEngagedSafeResponse::CheckEngagedSafeResponse(const std::string & n, const BT::NodeConfig & c)
     : ConditionNode(n, c)

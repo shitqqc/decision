@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <utility>
 
 namespace rm_decision
 {
@@ -34,8 +35,14 @@ BT::NodeStatus TrackTargetAction::onRunning()
     return v ? BT::NodeStatus::RUNNING : BT::NodeStatus::FAILURE;
 }
 
-SetGimbalPose::SetGimbalPose(const std::string & n, const BT::NodeConfig & c) : SyncActionNode(n, c)
+SetGimbalPose::SetGimbalPose(
+    const std::string & n, const BT::NodeConfig & c, rclcpp::Node::SharedPtr node)
+    : SyncActionNode(n, c), node_(std::move(node))
 {
+    const std::string topic =
+        node_->get_parameter_or<std::string>("gimbal_pose_topic", "/nav/gimbal_pose");
+    gimbal_pose_pub_ = node_->create_publisher<decision_interfaces::msg::GimbalPose>(
+        topic, rclcpp::QoS(10));
 }
 BT::PortsList SetGimbalPose::providedPorts()
 {
@@ -55,7 +62,11 @@ BT::NodeStatus SetGimbalPose::tick()
     config().blackboard->set(BbKey::kGimbalYawCmd, yaw);
     config().blackboard->set(BbKey::kGimbalPitchCmd, pitch);
     config().blackboard->set(BbKey::kPitchMode, mode);
-    // TODO: no gimbal hardware egress yet
+    decision_interfaces::msg::GimbalPose msg;
+    msg.mode = mode;
+    msg.yaw = yaw;
+    msg.pitch = pitch;
+    gimbal_pose_pub_->publish(msg);
     return BT::NodeStatus::SUCCESS;
 }
 
@@ -67,12 +78,18 @@ BT::PortsList SetEnergyAim::providedPorts()
     return {
         BT::InputPort<int>("aim_mode", 2, ""),
         BT::InputPort<double>("hold_sec", 15.0, ""),
+        BT::InputPort<bool>("include_active", false, "")
     };
 }
 BT::NodeStatus SetEnergyAim::tick()
 {
     bool activatable = false;
+    int big_status = 0;
     (void)config().blackboard->get(BbKey::kEnergyActivatable, activatable);
+    (void)config().blackboard->get(BbKey::kBigEnergyStatus, big_status);
+    bool include_active = false;
+    (void)getInput("include_active", include_active);
+    const bool active = (include_active && activatable) || big_status != 0;
 
     int aim_mode = 2;
     (void)getInput("aim_mode", aim_mode);
@@ -83,7 +100,7 @@ BT::NodeStatus SetEnergyAim::tick()
     (void)getInput("hold_sec", hold_sec);
 
     std::uint8_t mode = 0;
-    if (!activatable) {
+    if (!active) {
         window_open_ = false;
         start_sec_ = -1.0;
     } else {
@@ -100,21 +117,21 @@ BT::NodeStatus SetEnergyAim::tick()
     return BT::NodeStatus::SUCCESS;
 }
 
-SetGimbalPoseByAreaAction::SetGimbalPoseByAreaAction(
-    const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
-    : SyncActionNode(n, c), zones_(z)
-{
-}
-BT::PortsList SetGimbalPoseByAreaAction::providedPorts()
-{
-    return {BT::InputPort<std::string>("area", "enemy_outpost", "")};
-}
-BT::NodeStatus SetGimbalPoseByAreaAction::tick()
-{
-    (void)zones_;
-    config().blackboard->set(BbKey::kPitchMode, 1);
-    // TODO: area-based scan limits
-    return BT::NodeStatus::SUCCESS;
-}
+// SetGimbalPoseByAreaAction::SetGimbalPoseByAreaAction(
+//     const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
+//     : SyncActionNode(n, c), zones_(z)
+// {
+// }
+// BT::PortsList SetGimbalPoseByAreaAction::providedPorts()
+// {
+//     return {BT::InputPort<std::string>("area", "enemy_outpost", "")};
+// }
+// BT::NodeStatus SetGimbalPoseByAreaAction::tick()
+// {
+//     (void)zones_;
+//     config().blackboard->set(BbKey::kPitchMode, 1);
+//     // TODO: area-based scan limits
+//     return BT::NodeStatus::SUCCESS;
+// }
 
 } // namespace rm_decision

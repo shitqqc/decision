@@ -33,16 +33,16 @@ public:
   BT::NodeStatus tick() override;
 };
 
-class CheckInZone : public BT::ConditionNode
-{
-public:
-  CheckInZone(const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+// class CheckInZone : public BT::ConditionNode
+// {
+// public:
+//   CheckInZone(const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
+//   static BT::PortsList providedPorts();
+//   BT::NodeStatus tick() override;
 
-private:
-  const ZoneMap * zones_;
-};
+// private:
+//   const ZoneMap * zones_;
+// };
 
 class CheckEngagedSafeResponse : public BT::ConditionNode
 {

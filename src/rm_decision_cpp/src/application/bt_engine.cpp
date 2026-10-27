@@ -28,7 +28,6 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<CheckBigEnergyActive>("CheckBigEnergyActive");
   factory.registerNodeType<CheckManualControl>("CheckManualControl");
   factory.registerNodeType<CheckManualControl>("CheckManualOverride");
-  factory.registerNodeType<CheckManualFortAttack>("CheckManualFortAttack", zones);
   factory.registerNodeType<CheckTacticalMode>("CheckTacticalMode");
   factory.registerNodeType<CheckTacticalMode>("CheckTacticalModeCondition");
   factory.registerNodeType<CheckAmmoLow>("CheckAmmoLow");
@@ -43,19 +42,18 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<UpdateHighlandFallbackState>("UpdateHighlandFallbackState");
   factory.registerNodeType<CheckHighlandFallbackActive>("CheckHighlandFallbackActive");
   factory.registerNodeType<CheckOutpostSafeResponse>("CheckOutpostSafeResponse");
-  factory.registerNodeType<CheckTargetLocked>("CheckTargetLocked");
   factory.registerNodeType<CheckTargetArmorId>("CheckTargetArmorId");
-  factory.registerNodeType<CheckInStairsZone>("CheckInStairsZone", zones);
+  // factory.registerNodeType<CheckInStairsZone>("CheckInStairsZone", zones);
   factory.registerNodeType<CheckNoAllyBelowStairs>("CheckNoAllyBelowStairs");
-  factory.registerNodeType<CheckOwnFortIdle>("CheckOwnFortIdle", zones);
+  // factory.registerNodeType<CheckOwnFortIdle>("CheckOwnFortIdle", zones);
 
   // ---- tactical / resource / stance / gimbal conditions ----
   factory.registerNodeType<CheckDefendCondition>("CheckDefendCondition");
-  factory.registerNodeType<CheckAttackCondition>("CheckAttackCondition", zones);
+  factory.registerNodeType<CheckAttackCondition>("CheckAttackCondition");
   factory.registerNodeType<CheckHealth>("CheckHealth");
   factory.registerNodeType<CheckCoinRemaining>("CheckCoinRemaining");
   factory.registerNodeType<CheckCanFreeResurrect>("CheckCanFreeResurrect");
-  factory.registerNodeType<CheckInZone>("CheckInZone", zones);
+  // factory.registerNodeType<CheckInZone>("CheckInZone", zones);
   factory.registerNodeType<CheckEngagedSafeResponse>("CheckEngagedSafeResponse");
   factory.registerNodeType<CheckRemoteExchangeCooldown>("CheckRemoteExchangeCooldown");
   factory.registerNodeType<CheckRemainingAmmoExchange>("CheckRemainingAmmoExchange");
@@ -71,17 +69,17 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<CheckOutpostTarget>("CheckOutpostTarget");
   factory.registerNodeType<CheckOutpostLowHealthDefend>("CheckOutpostLowHealthDefend");
   factory.registerNodeType<CheckEnemyAreaRecentlyHurt>("CheckEnemyAreaRecentlyHurt");
-  factory.registerNodeType<CheckTargetDistance>("CheckTargetDistance");
-  factory.registerNodeType<CheckCrossZoneTransition>("CheckCrossZoneTransition", zones);
+  // factory.registerNodeType<CheckTargetDistance>("CheckTargetDistance");
+  // factory.registerNodeType<CheckCrossZoneTransition>("CheckCrossZoneTransition", zones);
   factory.registerNodeType<CheckCapacitorCapacity>("CheckCapacitorCapacity");
   factory.registerNodeType<CheckStanceEffectLimit>("CheckStanceEffectLimit");
   factory.registerNodeType<CheckStanceRefreshRequired>("CheckStanceRefreshRequired");
-  factory.registerNodeType<CheckInEnemyFortZone>("CheckInEnemyFortZone");
+  // factory.registerNodeType<CheckInEnemyFortZone>("CheckInEnemyFortZone");
   factory.registerNodeType<CheckEnemyDefenseHealthDrop>("CheckEnemyDefenseHealthDrop");
   factory.registerNodeType<CheckManualStanceOverride>("CheckManualStanceOverride");
   factory.registerNodeType<CheckShouldEnhanceStance>("CheckShouldEnhanceStance");
   factory.registerNodeType<CheckTargetVisible>("CheckTargetVisible");
-  factory.registerNodeType<CheckNearEnemyOutpost>("CheckNearEnemyOutpost", zones);
+  // factory.registerNodeType<CheckNearEnemyOutpost>("CheckNearEnemyOutpost", zones);
 
   // ---- actions ----
   factory.registerNodeType<SetCoordinate>("SetCoordinate", zones);
@@ -91,7 +89,7 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<SetTargetCoordinate>("SetTargetCoordinate");
   factory.registerNodeType<SelectPatrolPoint>("SelectPatrolPoint", zones);
   factory.registerNodeType<Wait>("Wait");
-  factory.registerNodeType<SetStairsPosition>("SetStairsPosition", zones);
+  // factory.registerNodeType<SetStairsPosition>("SetStairsPosition", zones);
   factory.registerNodeType<DescendStairsAction>("DescendStairsAction");
   factory.registerNodeType<AccumulateAmmoPurchase>("AccumulateAmmoPurchase");
   factory.registerNodeType<ChangeMapAction>("ChangeMapAction");
@@ -117,9 +115,9 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<ApplyManualStanceOverride>("ApplyManualStanceOverride");
 
   factory.registerNodeType<TrackTargetAction>("TrackTargetAction");
-  factory.registerNodeType<SetGimbalPose>("SetGimbalPose");
+  factory.registerNodeType<SetGimbalPose>("SetGimbalPose", node);
   factory.registerNodeType<SetEnergyAim>("SetEnergyAim");
-  factory.registerNodeType<SetGimbalPoseByAreaAction>("SetGimbalPoseByAreaAction", zones);
+  // factory.registerNodeType<SetGimbalPoseByAreaAction>("SetGimbalPoseByAreaAction", zones);
 }
 
 

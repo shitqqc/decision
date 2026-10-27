@@ -73,17 +73,17 @@ private:
   double end_sec_{0.0};
 };
 
-class SetStairsPosition : public BT::SyncActionNode
-{
-public:
-  SetStairsPosition(
-    const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+// class SetStairsPosition : public BT::SyncActionNode
+// {
+// public:
+//   SetStairsPosition(
+//     const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
+//   static BT::PortsList providedPorts();
+//   BT::NodeStatus tick() override;
 
-private:
-  const ZoneMap * zones_;
-};
+// private:
+//   const ZoneMap * zones_;
+// };
 
 class DescendStairsAction : public BT::StatefulActionNode
 {

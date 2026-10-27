@@ -22,23 +22,12 @@ BT::NodeStatus CheckDefendCondition::tick()
     return base > 0.f && base < thr ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
-CheckAttackCondition::CheckAttackCondition(
-    const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
-    : ConditionNode(n, c), zones_(z)
+CheckAttackCondition::CheckAttackCondition(const std::string & n, const BT::NodeConfig & c)
+    : ConditionNode(n, c)
 {
 }
 BT::NodeStatus CheckAttackCondition::tick()
 {
-    std::uint8_t mode = 0;
-    (void)config().blackboard->get(BbKey::kControlMode, mode);
-    if (mode == static_cast<std::uint8_t>(ControlMode_e::Manual) && zones_) {
-        double x = 0, y = 0;
-        (void)config().blackboard->get(BbKey::kManualGoalX, x);
-        (void)config().blackboard->get(BbKey::kManualGoalY, y);
-        if (zones_->inZone("enemy_fort", x, y))
-            return BT::NodeStatus::SUCCESS;
-    }
-
     std::uint8_t st = 0;
     int t = 0;
     std::uint8_t progress = 0;

@@ -15,7 +15,7 @@
           <!-- 金币复活：在敌方半场或进攻战术 + 金币充足 -->
           <!-- <Sequence name="InstantRevive">
             <Fallback>
-              <CheckInZone zone_name="enemy_defense" />
+              CheckInZone zone_name="enemy_defense" />
               <CheckTacticalModeCondition mode="attack" />
             </Fallback>
             <CheckCoinRemaining threshold="{instant_resurrect_cost}" mode="greater" />
@@ -50,12 +50,8 @@
         <RequestRemoteAmmoExchangeAction />
       </ReactiveSequence> -->
 
-      <!-- P2: 普通补给点弹药兑换（到家 + 弹药&lt;100 + 金币&gt;=100） -->
+      <!-- P2: 普通补给点弹药兑换（弹药&lt;100 + 金币&gt;=100） -->
       <ReactiveSequence name="NormalAmmoExchangeBranch">
-        <ReactiveFallback name="NormalAmmoExchangeConditions">
-          <CheckInZone zone_name="own_supply_zone" />
-          <CheckInZone zone_name="own_outpost_zone" />
-        </ReactiveFallback>
         <CheckAmmoLow ammo_threshold="150" />
         <CheckCoinRemaining threshold="100" mode="greater" />
         <CheckNormalExchangeCooldown cooldown_seconds="5.0" />

@@ -156,26 +156,26 @@ BT::NodeStatus Wait::onRunning()
     return nowSec() >= end_sec_ ? BT::NodeStatus::SUCCESS : BT::NodeStatus::RUNNING;
 }
 
-SetStairsPosition::SetStairsPosition(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
-    : SyncActionNode(n, c), zones_(z)
-{
-}
-BT::PortsList SetStairsPosition::providedPorts()
-{
-    return {BT::InputPort<std::string>("zone_name", "stairs", "")};
-}
-BT::NodeStatus SetStairsPosition::tick()
-{
-    if (!zones_)
-        return BT::NodeStatus::FAILURE;
-    // Prefer nav point near stairs if zone centroid unknown: use hero_guard as approx fallback
-    Point2d_s pt;
-    if (!zones_->getNavPoint(6, &pt))
-        return BT::NodeStatus::FAILURE;
-    config().blackboard->set(BbKey::kNavGoal, poseFromXyYaw(pt.x, pt.y, pt.yaw));
-    config().blackboard->set(BbKey::kNavGoalValid, true);
-    return BT::NodeStatus::SUCCESS;
-}
+// SetStairsPosition::SetStairsPosition(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
+//     : SyncActionNode(n, c), zones_(z)
+// {
+// }
+// BT::PortsList SetStairsPosition::providedPorts()
+// {
+//     return {BT::InputPort<std::string>("zone_name", "stairs", "")};
+// }
+// BT::NodeStatus SetStairsPosition::tick()
+// {
+//     if (!zones_)
+//         return BT::NodeStatus::FAILURE;
+//     // Prefer nav point near stairs if zone centroid unknown: use hero_guard as approx fallback
+//     Point2d_s pt;
+//     if (!zones_->getNavPoint(6, &pt))
+//         return BT::NodeStatus::FAILURE;
+//     config().blackboard->set(BbKey::kNavGoal, poseFromXyYaw(pt.x, pt.y, pt.yaw));
+//     config().blackboard->set(BbKey::kNavGoalValid, true);
+//     return BT::NodeStatus::SUCCESS;
+// }
 
 DescendStairsAction::DescendStairsAction(const std::string & n, const BT::NodeConfig & c)
     : StatefulActionNode(n, c)

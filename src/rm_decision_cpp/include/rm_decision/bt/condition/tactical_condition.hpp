@@ -20,13 +20,9 @@ public:
 class CheckAttackCondition : public BT::ConditionNode
 {
 public:
-  CheckAttackCondition(
-    const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
+  CheckAttackCondition(const std::string & _name, const BT::NodeConfig & _config);
   static BT::PortsList providedPorts() { return {}; }
   BT::NodeStatus tick() override;
-
-private:
-  const ZoneMap * zones_;
 };
 
 }  // namespace rm_decision

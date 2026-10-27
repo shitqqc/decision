@@ -3,7 +3,10 @@
 #include "rm_decision/domain/zone_map.hpp"
 
 #include <behaviortree_cpp/action_node.h>
+#include <decision_interfaces/msg/gimbal_pose.hpp>
+#include <rclcpp/rclcpp.hpp>
 
+#include <memory>
 #include <string>
 
 namespace rm_decision
@@ -22,9 +25,14 @@ public:
 class SetGimbalPose : public BT::SyncActionNode
 {
 public:
-  SetGimbalPose(const std::string & _name, const BT::NodeConfig & _config);
+  SetGimbalPose(
+    const std::string & _name, const BT::NodeConfig & _config, rclcpp::Node::SharedPtr _node);
   static BT::PortsList providedPorts();
   BT::NodeStatus tick() override;
+
+private:
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Publisher<decision_interfaces::msg::GimbalPose>::SharedPtr gimbal_pose_pub_;
 };
 
 class SetEnergyAim : public BT::SyncActionNode
@@ -39,16 +47,16 @@ private:
   double start_sec_{-1.0};
 };
 
-class SetGimbalPoseByAreaAction : public BT::SyncActionNode
-{
-public:
-  SetGimbalPoseByAreaAction(
-    const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+// class SetGimbalPoseByAreaAction : public BT::SyncActionNode
+// {
+// public:
+//   SetGimbalPoseByAreaAction(
+//     const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
+//   static BT::PortsList providedPorts();
+//   BT::NodeStatus tick() override;
 
-private:
-  const ZoneMap * zones_;
-};
+// private:
+//   const ZoneMap * zones_;
+// };
 
 }  // namespace rm_decision

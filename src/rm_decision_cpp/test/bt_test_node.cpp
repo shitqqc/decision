@@ -1,7 +1,7 @@
 #include "rm_decision/domain/blackboard_keys.hpp"
 #include "rm_decision/infrastructure/bt_status_latch.hpp"
 #include "rm_decision/infrastructure/game_info_referee_ingress.hpp"
-#include "rm_decision/infrastructure/odom_pose_ingress.hpp"
+// #include "rm_decision/infrastructure/odom_pose_ingress.hpp"
 #include "rm_decision/infrastructure/through_tunnel_ingress.hpp"
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -103,14 +103,14 @@ int main(int argc, char ** argv)
       "bt_snapshot_topic", "/nav/test/bt_snapshot");
     const auto game_topic = node->declare_parameter<std::string>(
       "game_info_topic_name", "/nav/game_info");
-    const auto odom_topic = node->declare_parameter<std::string>("odom_topic", "/odom");
+    // const auto odom_topic = node->declare_parameter<std::string>("odom_topic", "/odom");
     const auto tunnel_topic = node->declare_parameter<std::string>(
       "through_tunnel_topic", "/through_tunnel");
     const auto period = node->declare_parameter<int>("tick_period_milliseconds", 100);
 
     auto blackboard = BT::Blackboard::create();
     rm_decision::GameInfoRefereeIngress referee(*node, game_topic);
-    rm_decision::OdomPoseIngress pose(*node, odom_topic);
+    // rm_decision::OdomPoseIngress pose(*node, odom_topic);
     rm_decision::ThroughTunnelIngress tunnel(*node, tunnel_topic);
 
     BT::BehaviorTreeFactory factory;
@@ -124,7 +124,7 @@ int main(int argc, char ** argv)
       while (rclcpp::ok()) {
         rclcpp::spin_some(node);
         referee.update(*blackboard);
-        pose.update(*blackboard);
+        // pose.update(*blackboard);
         tunnel.update(*blackboard);
         latch.beginTick();
         tree.tickOnce();

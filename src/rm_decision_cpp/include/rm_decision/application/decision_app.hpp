@@ -27,7 +27,7 @@ private:
 
   rclcpp::Node::SharedPtr node_;
   std::unique_ptr<IRefereeIngress> referee_;
-  std::unique_ptr<INavInfoIngress> pose_;
+  // std::unique_ptr<INavInfoIngress> pose_;
   std::unique_ptr<INavInfoIngress> tunnel_;
   std::unique_ptr<ICommandEgress> command_;
   std::unique_ptr<BtSnapshotPublisher> snapshot_;

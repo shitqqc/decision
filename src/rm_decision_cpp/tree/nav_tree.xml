@@ -3,9 +3,6 @@
 <BehaviorTree ID="MainTree">
     <ReactiveSequence name="MainReactiveSequence">
       <ForceSuccess>
-        <CheckTargetLocked name="CheckEarlyTargetLocked" />
-      </ForceSuccess>
-      <ForceSuccess>
         <!-- 每 tick 更新自动前哨攻击/撤退状态，不能被导航优先级分支短路。 -->
         <UpdateOutpostAttackState name="UpdateOutpostAttackState"
                                   retreat_health_threshold="50"
@@ -42,9 +39,6 @@
       </ForceSuccess>
      
       <ReactiveFallback name="NavPriorityRoot">
-        <!-- <SubTree ID="TunnelRecoverySubTree"
-                 __shared_blackboard="true"
-                 __autoremap="true" /> -->
 
         <!-- 前哨专项撤退一旦触发就保持高优先级；回血至上限且5秒防御结束后退出。 -->
         <ReactiveSequence name="Priority0OutpostHealthRecovery">
@@ -67,9 +61,6 @@
                     <CheckTacticalModeCondition name="CheckFallbackManualAttackMode"
                                                 mode="attack" />
                     <SetCoordinate name="SetFallbackManualEnemyFortGoal" goal="4" />
-                    <ForceSuccess>
-                      <NavigateToPoseAction name="NavigateFallbackManualEnemyFort" />
-                    </ForceSuccess>
                   </ReactiveSequence>
                   <ReactiveSequence name="FallbackManualPointResponse">
                     <SetManualOverrideGoal name="SetFallbackManualOverrideGoal"
@@ -198,7 +189,7 @@
               <ReactiveFallback name="MidAmmoSupplyZoneSelector">
                 <ReactiveSequence name="MidOwnDefenseHomeSupply">
                   <!-- <Inverter>
-                    <CheckInZone zone_name="enemy_defense" />
+                  CheckInZone zone_name="enemy_defense" />
                   </Inverter> -->
                   <SetNavMode name="SetMidAmmoRetreatNavMode" mode="retreat" />
                   <SetCoordinate name="SetMidOwnDefenseSupplyHomeGoal" goal="0" />
@@ -225,7 +216,7 @@
               <ReactiveFallback name="GlobalAmmoSupplyZoneSelector">
                 <ReactiveSequence name="GlobalHomeAmmoSupply">
                   <!-- <Inverter>
-                    <CheckInZone zone_name="enemy_defense" />
+                  CheckInZone zone_name="enemy_defense" />
                   </Inverter> -->
                   <SetNavMode name="SetGlobalAmmoRetreatNavMode" mode="retreat" />
                   <SetCoordinate name="SetGlobalAmmoHomeGoal" goal="0" />
@@ -244,7 +235,6 @@
 
             <!-- <ReactiveSequence name="EarlyTargetAttack">
               <ReactiveSequence name="EarlyTargetPursuit">
-                <CheckTargetLocked name="CheckEarlyTargetLocked" />
                 <SetTargetCoordinate name="SetEarlyTargetCoordinate" tracing_dist="1.0"/>
                 <NavigateToPoseAction name="NavigateEarlyTrackingTarget" />
               </ReactiveSequence>
@@ -267,7 +257,7 @@
 
                 <ReactiveSequence name="EarlyDefendFortResponse">
                   <CheckTacticalModeCondition name="CheckEarlyDefendMode" mode="defend" />
-                  <CheckOwnFortIdle name="CheckEarlyOwnFortIdle" />
+                  <!-- <CheckOwnFortIdle name="CheckEarlyOwnFortIdle" /> -->
                   <SetNavMode name="SetEarlyFortResponseNavMode" mode="response" />
                   <SetCoordinate name="SetEarlyOwnFortGoal" goal="3" />
                   <NavigateToPoseAction name="NavigateEarlyOwnFort" />

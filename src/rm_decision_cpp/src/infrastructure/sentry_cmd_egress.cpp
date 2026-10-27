@@ -59,10 +59,7 @@ void SentryCmdEgress::publish(const BT::Blackboard & _bb)
 
   bool super_cap = false;
   (void)_bb.get(BbKey::kUseSuperCap, super_cap);
-  // Also auto-enable in enemy fort if stance tree missed it
-  bool in_fort = false;
-  (void)_bb.get(BbKey::kInEnemyFortZone, in_fort);
-  cmd.use_super_cap = super_cap || in_fort;
+  cmd.use_super_cap = super_cap;
 
   cmd.small_camera_control = false;
   sentry_pub_->publish(cmd);

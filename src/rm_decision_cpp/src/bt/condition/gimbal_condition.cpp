@@ -16,6 +16,7 @@ BT::NodeStatus CheckTargetVisible::tick()
     return v ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
+/* 
 CheckNearEnemyOutpost::CheckNearEnemyOutpost(
     const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
     : ConditionNode(n, c), zones_(z)
@@ -46,5 +47,6 @@ BT::NodeStatus CheckNearEnemyOutpost::tick()
         return BT::NodeStatus::FAILURE;
     return std::hypot(x - pt.x, y - pt.y) <= r ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
+*/
 
 } // namespace rm_decision

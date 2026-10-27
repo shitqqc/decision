@@ -5,17 +5,10 @@
       <UpdateStanceDuration />
       
       <ReactiveFallback name="StancePriorityRoot">
-        <ReactiveSequence name="ManualAttackTunnelDefendAlignBranch">
-          <CheckTacticalModeCondition mode="attack" />
-          <CheckCrossZoneTransition />
-          <ChangeStance name="ChangeStanceManualAttackTunnelDefend" stance="DEFEND" />
-          <!-- <CheckStanceCooldown cooldown="5.0" /> -->
-        </ReactiveSequence>
-
-        <ReactiveSequence name="MoveStanceNoGyroBranch">
-          <CheckCrossZoneTransition />
-          <ChangeStance name="ChangeStanceMoveNoGyro" stance="MOVE" />
-          <!-- <CheckStanceCooldown cooldown="5.0" /> -->
+        <ReactiveSequence name="MoveStanceNoSpinBranch">
+          <ChangeStance name="ChangeStanceMoveNoSpin" stance="MOVE" cooldown="5.0"/>
+          <Script code="spin_enabled := !through_tunnel" />
+          <SetSpinState use_spin="{spin_enabled}" />
         </ReactiveSequence>
 
         <!-- 敌方防守区受击后优先使用强化防御；连续5秒未再掉血后退出。
@@ -26,29 +19,21 @@
                                     min_remaining_sec="1"
                                     force_if_available="true" />
           <ChangeStance name="ChangeStanceEnemyDefenseDamageEnhancedDefend"
-                        stance="ENHANCED_DEFEND" />
+                        stance="ENHANCED_DEFEND"
+                        cooldown="5.0" />
         </ReactiveSequence>
 
-        <!-- 锁定2号装甲板且位于楼梯区域时，强化攻击可用即启用；
+        <!-- 锁定2号装甲板时，强化攻击可用即启用；
              优先级紧随敌方防守区受击强化防御，条件不满足时回退现有姿态决策。 -->
         <ReactiveSequence name="StairsTargetEnhancedAttackBranch">
           <CheckTargetArmorId target_id="2" />
-          <CheckInStairsZone />
           <CheckShouldEnhanceStance target_stance="ATTACK"
                                     min_remaining_sec="1"
                                     force_if_available="true" />
           <ChangeStance name="ChangeStanceStairsTargetEnhancedAttack"
-                        stance="ENHANCED_ATTACK" />
+                        stance="ENHANCED_ATTACK" 
+                        cooldown="5.0" />
         </ReactiveSequence>
-
-        <!-- 强化姿态专门分支:非隧道场景下,若操作手强化覆盖生效(override_active && 能量 && 未超时),
-             直接产出强化姿态并返回 SUCCESS,自动分支不会 tick。
-             优先级:高于自动分支,低于隧道分支。
-             此分支只覆盖姿态,不改变当前小陀螺策略。 -->
-        <Sequence name="ManualEnhancedStanceBranch">
-          <CheckManualStanceOverride />
-          <ApplyManualStanceOverride name="ApplyManualEnhancedStance" />
-        </Sequence>
 
         <!-- 前哨强化防御共用分支：保留每次撤退最初5秒；前哨RESPONSE目标下血量较进入目标时下降5个百分点，本局额外触发一次固定5秒。 -->
         <ReactiveSequence name="OutpostEnhancedDefendBranch">
@@ -61,7 +46,8 @@
                                          goal_distance_threshold="0.5" />
           </Fallback>
           <ChangeStance name="ChangeStanceOutpostRetreatEnhancedDefend"
-                        stance="ENHANCED_DEFEND" />
+                        stance="ENHANCED_DEFEND" 
+                        cooldown="5.0" />
         </ReactiveSequence>
 
         <!-- 敌区受击强化防御：冲堡接近阶段继续执行 MOVE/零陀螺/航向对齐，
@@ -77,10 +63,10 @@
           <ReactiveFallback name="EnemyAreaHurtContextSelector">
             <Sequence name="ArrivedEnemyFortHurtEnhancedDefend">
               <CheckTacticalModeCondition mode="attack" />
-              <CheckInEnemyFortZone />
               <SetSpinState use_spin="true" />
               <ChangeStance name="ChangeStanceArrivedEnemyFortHurtEnhancedDefend"
-                            stance="ENHANCED_DEFEND" />
+                            stance="ENHANCED_DEFEND" 
+                            cooldown="5.0" />
             </Sequence>
             <Sequence name="NonAttackEnemyAreaHurtEnhancedDefend">
               <Inverter>
@@ -88,16 +74,16 @@
               </Inverter>
               <SetSpinState use_spin="true" />
               <ChangeStance name="ChangeStanceEnemyAreaHurtEnhancedDefend"
-                            stance="ENHANCED_DEFEND" />
+                            stance="ENHANCED_DEFEND" 
+                            cooldown="5.0" />
             </Sequence>
           </ReactiveFallback>
         </ReactiveSequence>
 
-        <ReactiveSequence name="AttackFortDefendGyroBranch">
+        <ReactiveSequence name="AttackFortDefendSpinBranch">
           <CheckTacticalModeCondition mode="attack" />
           <ReactiveFallback name="EnemyFortStanceSelector">
-            <Sequence name="ArrivedEnemyFortDefendGyro">
-              <CheckInEnemyFortZone />
+            <Sequence name="ArrivedEnemyFortDefendSpin">
               <SetSpinState use_spin="true" />
               <Fallback name="FortDefendStanceSelector">
                 <Sequence name="TryEnhancedDefend">
@@ -106,15 +92,15 @@
                     accumulated_threshold="170"
                     fallback_game_time="60"
                     min_remaining_sec="1" />
-                  <ChangeStance name="ChangeStanceArrivedEnemyFortEnhancedDefend" stance="ENHANCED_DEFEND" />
+                  <ChangeStance name="ChangeStanceArrivedEnemyFortEnhancedDefend" stance="ENHANCED_DEFEND" cooldown="5.0" />
                 </Sequence>
-                <ChangeStance name="ChangeStanceArrivedEnemyFortDefend" stance="DEFEND" />
+                <ChangeStance name="ChangeStanceArrivedEnemyFortDefend" stance="DEFEND" cooldown="5.0" />
               </Fallback>
             </Sequence>
-            <Sequence name="ApproachEnemyFortMoveZeroGyro">
-              <Inverter>
+            <Sequence name="ApproachEnemyFortMoveZeroSpin">
+              <!-- <Inverter>
                 <CheckInEnemyFortZone />
-              </Inverter>
+              </Inverter> -->
               <SetSpinState use_spin="false" />
               <Fallback name="FortMoveStanceSelector">
                 <Sequence name="TryEnhancedMove">
@@ -123,9 +109,9 @@
                     accumulated_threshold="170"
                     fallback_game_time="60"
                     min_remaining_sec="1" />
-                  <ChangeStance name="ChangeStanceApproachEnemyFortEnhancedMove" stance="ENHANCED_MOVE" />
+                  <ChangeStance name="ChangeStanceApproachEnemyFortEnhancedMove" stance="ENHANCED_MOVE" cooldown="5.0" />
                 </Sequence>
-                <ChangeStance name="ChangeStanceApproachEnemyFortMove" stance="MOVE" />
+                <ChangeStance name="ChangeStanceApproachEnemyFortMove" stance="MOVE" cooldown="5.0" />
               </Fallback>
             </Sequence>
           </ReactiveFallback>
@@ -146,7 +132,7 @@
                   fallback_game_time="60"
                   min_remaining_sec="1"
                   force_if_available="true" />
-                <ChangeStance name="ChangeStanceOutpostEnhancedAttack" stance="ENHANCED_ATTACK" />
+                <ChangeStance name="ChangeStanceOutpostEnhancedAttack" stance="ENHANCED_ATTACK" cooldown="5.0" />
               </Sequence>
               <ChangeStance name="ChangeStanceOutpostAttack" stance="ATTACK" />
             </Fallback>
@@ -156,7 +142,6 @@
             <CheckHeat threshold="200" mode="greater" />
             <!-- <CheckStanceEffectLimit target_stance="ATTACK" max_time_sec="180" /> -->
             <SetSpinState use_spin="true" />
-            <!-- <CheckStanceCooldown cooldown="5.0" /> -->
             <Fallback name="AbsoluteAttackStanceSelector">
               <Sequence name="TryEnhancedAttack">
                 <CheckShouldEnhanceStance
@@ -164,9 +149,9 @@
                   accumulated_threshold="170"
                   fallback_game_time="60"
                   min_remaining_sec="1" />
-                <ChangeStance name="ChangeStanceAbsoluteEnhancedAttack" stance="ENHANCED_ATTACK" />
+                <ChangeStance name="ChangeStanceAbsoluteEnhancedAttack" stance="ENHANCED_ATTACK" cooldown="5.0" />
               </Sequence>
-              <ChangeStance name="ChangeStanceAbsoluteAttack" stance="ATTACK" />
+              <ChangeStance name="ChangeStanceAbsoluteAttack" stance="ATTACK" cooldown="5.0" />
             </Fallback>
           </Sequence>
         </ReactiveFallback>
@@ -176,7 +161,6 @@
           <CheckHealth threshold="50" mode="greater" />
           <!-- <CheckStanceEffectLimit target_stance="ATTACK" max_time_sec="180" /> -->
           <SetSpinState use_spin="true" />
-          <!-- <CheckStanceCooldown cooldown="5.0" /> -->
           <Fallback name="CombatAttackStanceSelector">
             <Sequence name="TryEnhancedAttack">
               <CheckShouldEnhanceStance
@@ -184,9 +168,9 @@
                 accumulated_threshold="170"
                 fallback_game_time="60"
                 min_remaining_sec="1" />
-              <ChangeStance name="ChangeStanceCombatEnhancedAttack" stance="ENHANCED_ATTACK" />
+              <ChangeStance name="ChangeStanceCombatEnhancedAttack" stance="ENHANCED_ATTACK" cooldown="5.0" />
             </Sequence>
-            <ChangeStance name="ChangeStanceCombatAttack" stance="ATTACK" />
+            <ChangeStance name="ChangeStanceCombatAttack" stance="ATTACK" cooldown="5.0" />
           </Fallback>
         </Sequence>
 
@@ -195,7 +179,6 @@
           <CheckHealth threshold="50" mode="less" />
           <!-- <CheckStanceEffectLimit target_stance="DEFEND" max_time_sec="180" /> -->
           <SetSpinState use_spin="true" />
-          <!-- <CheckStanceCooldown cooldown="5.0" /> -->
           <Fallback name="DefendStanceSelector">
             <Sequence name="TryEnhancedDefend">
               <CheckShouldEnhanceStance
@@ -203,19 +186,18 @@
                 accumulated_threshold="170"
                 fallback_game_time="60"
                 min_remaining_sec="1" />
-              <ChangeStance name="ChangeStanceEnhancedDefend" stance="ENHANCED_DEFEND" />
+              <ChangeStance name="ChangeStanceEnhancedDefend" stance="ENHANCED_DEFEND" cooldown="5.0" />
             </Sequence>
-            <ChangeStance name="ChangeStanceDefend" stance="DEFEND" />
+            <ChangeStance name="ChangeStanceDefend" stance="DEFEND" cooldown="5.0" />
           </Fallback>
         </Sequence>
 
-        <Sequence name="MoveStanceGyroBranch">
-          <Fallback name="MoveGyroConditions">
+        <Sequence name="MoveStanceSpinBranch">
+          <Fallback name="MoveSpinConditions">
             <CheckCapacitorCapacity threshold="30" mode="less" />
             <CheckEngagedStatus expected="false" />
           </Fallback>
           <SetSpinState use_spin="true" />
-          <!-- <CheckStanceCooldown cooldown="5.0" /> -->
           <Fallback name="MoveStanceSelector">
             <Sequence name="TryEnhancedMove">
               <CheckShouldEnhanceStance
@@ -223,21 +205,20 @@
                 accumulated_threshold="170"
                 fallback_game_time="60"
                 min_remaining_sec="1" />
-              <ChangeStance name="ChangeStanceEnhancedMove" stance="ENHANCED_MOVE" />
+              <ChangeStance name="ChangeStanceEnhancedMove" stance="ENHANCED_MOVE" cooldown="5.0" />
             </Sequence>
             <!-- <Sequence name="DisengagedHighlandDefendBranch">
               <Inverter>
-                <CheckInZone zone_name="own_defend" />
+                CheckInZone zone_name="own_defend" />
               </Inverter>
               <ChangeStance name="ChangeStanceDisengagedHighlandDefend" stance="DEFEND" />
             </Sequence> -->
-            <ChangeStance name="ChangeStanceMoveWithGyro" stance="MOVE" />
+            <ChangeStance name="ChangeStanceMoveWithSpin" stance="MOVE" cooldown="5.0" />
           </Fallback>
         </Sequence>
         
         <Sequence name="DefaultDefendBranch">
           <SetSpinState use_spin="true" />
-          <!-- <CheckStanceCooldown cooldown="5.0" /> -->
           <Fallback name="DefaultDefendStanceSelector">
             <Sequence name="TryEnhancedDefend">
               <CheckShouldEnhanceStance
@@ -245,9 +226,9 @@
                 accumulated_threshold="170"
                 fallback_game_time="60"
                 min_remaining_sec="1" />
-              <ChangeStance name="DefaultEnhancedDefendStance" stance="ENHANCED_DEFEND" />
+              <ChangeStance name="DefaultEnhancedDefendStance" stance="ENHANCED_DEFEND" cooldown="5.0" />
             </Sequence>
-            <ChangeStance name="DefaultDefendStance" stance="DEFEND" />
+            <ChangeStance name="DefaultDefendStance" stance="DEFEND" cooldown="5.0" />
           </Fallback>
         </Sequence>
 

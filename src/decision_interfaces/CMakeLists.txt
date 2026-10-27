@@ -14,6 +14,7 @@ find_package(std_msgs REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/GameInfo.msg"
   "msg/AutoAimStatus.msg"
+  "msg/GimbalPose.msg"
   "msg/referee/SentryCmd.msg"
   DEPENDENCIES std_msgs
 )

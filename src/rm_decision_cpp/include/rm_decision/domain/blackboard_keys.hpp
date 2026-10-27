@@ -37,10 +37,10 @@ inline constexpr const char * kEnhancedDefendRemaining = "enhanced_defend_remain
 inline constexpr const char * kEnhancedMoveRemaining = "enhanced_move_remaining_time";
 
 // Pose
-inline constexpr const char * kCurrentPoseX = "current_pose_x";
-inline constexpr const char * kCurrentPoseY = "current_pose_y";
-inline constexpr const char * kCurrentPoseYaw = "current_pose_yaw";
-inline constexpr const char * kPoseValid = "pose_valid";
+// inline constexpr const char * kCurrentPoseX = "current_pose_x";
+// inline constexpr const char * kCurrentPoseY = "current_pose_y";
+// inline constexpr const char * kCurrentPoseYaw = "current_pose_yaw";
+// inline constexpr const char * kPoseValid = "pose_valid";
 // Tunnel
 inline constexpr const char * kThroughTunnel = "through_tunnel";
 
@@ -57,11 +57,9 @@ inline constexpr const char * kReviveRequest = "revive_request";
 inline constexpr const char * kAmmoPurchaseTotal = "ammo_purchase_total";
 inline constexpr const char * kBuyProjectileTimes = "buy_projectile_times";
 inline constexpr const char * kBuyHpTimes = "buy_hp_times";
-inline constexpr const char * kInEnemyFortZone = "in_enemy_fort_zone";
-inline constexpr const char * kInOwnSupplyZone = "in_own_supply_zone";
-inline constexpr const char * kInOwnOutpostZone = "in_own_outpost_zone";
-// inline constexpr const char * kCurrentLifterPos = "current_lifter_pos"; // TOP = 0, BOTTOM = 1
-// inline constexpr const char * kDesiredLifterPos = "desired_lifter_pos"; 
+// inline constexpr const char * kInEnemyFortZone = "in_enemy_fort_zone";
+// inline constexpr const char * kInOwnSupplyZone = "in_own_supply_zone";
+// inline constexpr const char * kInOwnOutpostZone = "in_own_outpost_zone";
 inline constexpr const char * kTargetValid = "target_valid";
 inline constexpr const char * kTargetPoseX = "target_pose_x";
 inline constexpr const char * kTargetPoseY = "target_pose_y";
@@ -78,7 +76,6 @@ inline constexpr const char * kOutpostEnhancedDefendActive = "outpost_enhanced_d
 inline constexpr const char * kPatrolIndex = "patrol_index";
 inline constexpr const char * kPatrolBranch = "patrol_branch";
 inline constexpr const char * kTargetArmorId = "target_armor_id";
-inline constexpr const char * kNotAimEnemy = "not_aim_enemy";
 inline constexpr const char * kCapacitorCapacity = "capacitor_capacity";
 inline constexpr const char * kManualStanceOverrideActive = "manual_stance_override_active";
 inline constexpr const char * kManualStanceOverride = "manual_stance_override";

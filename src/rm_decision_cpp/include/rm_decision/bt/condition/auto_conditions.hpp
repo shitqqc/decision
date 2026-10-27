@@ -51,20 +51,7 @@ public:
   BT::NodeStatus tick() override;
 };
 
-/// Alias of bit CheckManualOverride.
 using CheckManualOverride = CheckManualControl;
-
-class CheckManualFortAttack : public BT::ConditionNode
-{
-public:
-  CheckManualFortAttack(
-    const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
-  static BT::PortsList providedPorts() { return {}; }
-  BT::NodeStatus tick() override;
-
-private:
-  const ZoneMap * zones_;
-};
 
 class CheckTacticalMode : public BT::ConditionNode
 {
@@ -181,14 +168,6 @@ public:
   BT::NodeStatus tick() override;
 };
 
-class CheckTargetLocked : public BT::ConditionNode
-{
-public:
-  CheckTargetLocked(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts() { return {}; }
-  BT::NodeStatus tick() override;
-};
-
 class CheckTargetArmorId : public BT::ConditionNode
 {
 public:
@@ -197,17 +176,17 @@ public:
   BT::NodeStatus tick() override;
 };
 
-class CheckInStairsZone : public BT::ConditionNode
-{
-public:
-  CheckInStairsZone(
-    const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+// class CheckInStairsZone : public BT::ConditionNode
+// {
+// public:
+//   CheckInStairsZone(
+//     const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
+//   static BT::PortsList providedPorts();
+//   BT::NodeStatus tick() override;
 
-private:
-  const ZoneMap * zones_;
-};
+// private:
+//   const ZoneMap * zones_;
+// };
 
 class CheckNoAllyBelowStairs : public BT::ConditionNode
 {
@@ -217,16 +196,16 @@ public:
   BT::NodeStatus tick() override;
 };
 
-class CheckOwnFortIdle : public BT::ConditionNode
-{
-public:
-  CheckOwnFortIdle(
-    const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
-  static BT::PortsList providedPorts() { return {}; }
-  BT::NodeStatus tick() override;
+// class CheckOwnFortIdle : public BT::ConditionNode
+// {
+// public:
+//   CheckOwnFortIdle(
+//     const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
+//   static BT::PortsList providedPorts() { return {}; }
+//   BT::NodeStatus tick() override;
 
-private:
-  const ZoneMap * zones_;
-};
+// private:
+//   const ZoneMap * zones_;
+// };
 
 }  // namespace rm_decision
