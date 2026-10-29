@@ -168,13 +168,13 @@ public:
   BT::NodeStatus tick() override;
 };
 
-class CheckTargetArmorId : public BT::ConditionNode
-{
-public:
-  CheckTargetArmorId(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
-};
+// class CheckTargetArmorId : public BT::ConditionNode
+// {
+// public:
+//   CheckTargetArmorId(const std::string & _name, const BT::NodeConfig & _config);
+//   static BT::PortsList providedPorts();
+//   BT::NodeStatus tick() override;
+// };
 
 // class CheckInStairsZone : public BT::ConditionNode
 // {

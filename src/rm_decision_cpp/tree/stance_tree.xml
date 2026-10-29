@@ -25,7 +25,7 @@
 
         <!-- 锁定2号装甲板时，强化攻击可用即启用；
              优先级紧随敌方防守区受击强化防御，条件不满足时回退现有姿态决策。 -->
-        <ReactiveSequence name="StairsTargetEnhancedAttackBranch">
+        <!-- <ReactiveSequence name="StairsTargetEnhancedAttackBranch">
           <CheckTargetArmorId target_id="2" />
           <CheckShouldEnhanceStance target_stance="ATTACK"
                                     min_remaining_sec="1"
@@ -33,7 +33,7 @@
           <ChangeStance name="ChangeStanceStairsTargetEnhancedAttack"
                         stance="ENHANCED_ATTACK" 
                         cooldown="5.0" />
-        </ReactiveSequence>
+        </ReactiveSequence> -->
 
         <!-- 前哨强化防御共用分支：保留每次撤退最初5秒；前哨RESPONSE目标下血量较进入目标时下降5个百分点，本局额外触发一次固定5秒。 -->
         <ReactiveSequence name="OutpostEnhancedDefendBranch">

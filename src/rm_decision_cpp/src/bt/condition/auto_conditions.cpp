@@ -428,23 +428,23 @@ BT::NodeStatus CheckOutpostSafeResponse::tick()
     return hp >= min_hp ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
-CheckTargetArmorId::CheckTargetArmorId(const std::string & n, const BT::NodeConfig & c)
-    : ConditionNode(n, c)
-{
-}
-BT::PortsList CheckTargetArmorId::providedPorts()
-{
-    return {BT::InputPort<int>("armor_id", 0, ""), BT::InputPort<int>("target_id", 0, "")};
-}
-BT::NodeStatus CheckTargetArmorId::tick()
-{
-    int want = 0;
-    if (!getInput("target_id", want))
-        (void)getInput("armor_id", want);
-    int id = -1;
-    (void)config().blackboard->get(BbKey::kTargetArmorId, id);
-    return id == want ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-}
+// CheckTargetArmorId::CheckTargetArmorId(const std::string & n, const BT::NodeConfig & c)
+//     : ConditionNode(n, c)
+// {
+// }
+// BT::PortsList CheckTargetArmorId::providedPorts()
+// {
+//     return {BT::InputPort<int>("armor_id", 0, ""), BT::InputPort<int>("target_id", 0, "")};
+// }
+// BT::NodeStatus CheckTargetArmorId::tick()
+// {
+//     int want = 0;
+//     if (!getInput("target_id", want))
+//         (void)getInput("armor_id", want);
+//     int id = -1;
+//     (void)config().blackboard->get(BbKey::kTargetArmorId, id);
+//     return id == want ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+// }
 
 // CheckInStairsZone::CheckInStairsZone(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
 //     : ConditionNode(n, c) , zones_(z)

@@ -46,7 +46,6 @@ DecisionApp::DecisionApp(rclcpp::Node::SharedPtr _node)
 void DecisionApp::initDefaults_(BT::Blackboard & _bb)
 {
   _bb.set(BbKey::kNavGoalValid, false);
-  // _bb.set(BbKey::kPoseValid, false);
   _bb.set(BbKey::kTacticalMode, static_cast<std::uint8_t>(TacticalMode_e::Normal));
   _bb.set(BbKey::kNavMode, static_cast<std::uint8_t>(NavMode_e::Patrol));
   _bb.set(BbKey::kDesiredStance, static_cast<std::uint8_t>(StanceCmd_e::Move));
@@ -56,9 +55,6 @@ void DecisionApp::initDefaults_(BT::Blackboard & _bb)
   _bb.set(BbKey::kAmmoPurchaseTotal, static_cast<std::uint16_t>(0));
   _bb.set(BbKey::kBuyHpTimes, static_cast<std::uint16_t>(0));
   _bb.set(BbKey::kBuyProjectileTimes, static_cast<std::uint16_t>(0));
-  // _bb.set(BbKey::kInEnemyFortZone, false);
-  // _bb.set(BbKey::kInOwnSupplyZone, false);
-  // _bb.set(BbKey::kInOwnOutpostZone, false);
   _bb.set(BbKey::kCurrentStance, static_cast<std::uint8_t>(StanceCmd_e::Move));
   _bb.set(BbKey::kEnemyOutpostDestroyed, false);
   _bb.set(BbKey::kOutpostAttackState, 0);
@@ -116,9 +112,6 @@ bool DecisionApp::start()
   const std::string game_info_topic = resolveTopic(*node_, "game_info_topic_name", "game_info");
   referee_ = std::make_unique<GameInfoRefereeIngress>(*node_, game_info_topic);
 
-  // const std::string odom_topic = node_->get_parameter_or<std::string>("odom_topic", "/odom");
-  // pose_ = std::make_unique<OdomPoseIngress>(*node_, odom_topic);
-
   const std::string through_tunnel_topic =
     node_->get_parameter_or<std::string>("through_tunnel_topic", "/through_tunnel");
   tunnel_ = std::make_unique<ThroughTunnelIngress>(*node_, through_tunnel_topic);
@@ -165,16 +158,18 @@ void DecisionApp::spinLoop()
   while (rclcpp::ok()) {
     rclcpp::spin_some(node_);
     referee_->update(*blackboard_);
-    // pose_->update(*blackboard_);
     tunnel_->update(*blackboard_);
-    // updateZoneFlags(zones_, *blackboard_);
     engine_.tickOnce();
     command_->publish(*blackboard_);
     if (snapshot_) {
       snapshot_->publish(
-        engine_.resourceTree(), engine_.resourceLatch(), engine_.tacticalTree(),
-        engine_.tacticalLatch(), engine_.navTree(), engine_.navLatch(), engine_.stanceTree(),
-        engine_.stanceLatch(), engine_.gimbalTree(), engine_.gimbalLatch(), *blackboard_);
+        engine_.resourceTree(), engine_.resourceLatch(), 
+        engine_.tacticalTree(), engine_.tacticalLatch(), 
+        engine_.navTree(), engine_.navLatch(), 
+        engine_.stanceTree(), engine_.stanceLatch(), 
+        engine_.gimbalTree(), engine_.gimbalLatch(), 
+        engine_.ulTree(), engine_.ulLatch(), 
+        *blackboard_);
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(tick_period_ms_));
   }

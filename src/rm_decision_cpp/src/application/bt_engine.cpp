@@ -42,10 +42,7 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<UpdateHighlandFallbackState>("UpdateHighlandFallbackState");
   factory.registerNodeType<CheckHighlandFallbackActive>("CheckHighlandFallbackActive");
   factory.registerNodeType<CheckOutpostSafeResponse>("CheckOutpostSafeResponse");
-  factory.registerNodeType<CheckTargetArmorId>("CheckTargetArmorId");
-  // factory.registerNodeType<CheckInStairsZone>("CheckInStairsZone", zones);
   factory.registerNodeType<CheckNoAllyBelowStairs>("CheckNoAllyBelowStairs");
-  // factory.registerNodeType<CheckOwnFortIdle>("CheckOwnFortIdle", zones);
 
   // ---- tactical / resource / stance / gimbal conditions ----
   factory.registerNodeType<CheckDefendCondition>("CheckDefendCondition");
@@ -53,7 +50,6 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<CheckHealth>("CheckHealth");
   factory.registerNodeType<CheckCoinRemaining>("CheckCoinRemaining");
   factory.registerNodeType<CheckCanFreeResurrect>("CheckCanFreeResurrect");
-  // factory.registerNodeType<CheckInZone>("CheckInZone", zones);
   factory.registerNodeType<CheckEngagedSafeResponse>("CheckEngagedSafeResponse");
   factory.registerNodeType<CheckRemoteExchangeCooldown>("CheckRemoteExchangeCooldown");
   factory.registerNodeType<CheckRemainingAmmoExchange>("CheckRemainingAmmoExchange");
@@ -69,18 +65,13 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<CheckOutpostTarget>("CheckOutpostTarget");
   factory.registerNodeType<CheckOutpostLowHealthDefend>("CheckOutpostLowHealthDefend");
   factory.registerNodeType<CheckEnemyAreaRecentlyHurt>("CheckEnemyAreaRecentlyHurt");
-  // factory.registerNodeType<CheckTargetDistance>("CheckTargetDistance");
-  // factory.registerNodeType<CheckCrossZoneTransition>("CheckCrossZoneTransition", zones);
   factory.registerNodeType<CheckCapacitorCapacity>("CheckCapacitorCapacity");
   factory.registerNodeType<CheckStanceEffectLimit>("CheckStanceEffectLimit");
   factory.registerNodeType<CheckStanceRefreshRequired>("CheckStanceRefreshRequired");
-  // factory.registerNodeType<CheckInEnemyFortZone>("CheckInEnemyFortZone");
   factory.registerNodeType<CheckEnemyDefenseHealthDrop>("CheckEnemyDefenseHealthDrop");
   factory.registerNodeType<CheckManualStanceOverride>("CheckManualStanceOverride");
   factory.registerNodeType<CheckShouldEnhanceStance>("CheckShouldEnhanceStance");
-  factory.registerNodeType<CheckTargetVisible>("CheckTargetVisible");
-  // factory.registerNodeType<CheckNearEnemyOutpost>("CheckNearEnemyOutpost", zones);
-
+  
   // ---- actions ----
   factory.registerNodeType<SetCoordinate>("SetCoordinate", zones);
   factory.registerNodeType<SetNavMode>("SetNavMode");
@@ -89,7 +80,6 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<SetTargetCoordinate>("SetTargetCoordinate");
   factory.registerNodeType<SelectPatrolPoint>("SelectPatrolPoint", zones);
   factory.registerNodeType<Wait>("Wait");
-  // factory.registerNodeType<SetStairsPosition>("SetStairsPosition", zones);
   factory.registerNodeType<DescendStairsAction>("DescendStairsAction");
   factory.registerNodeType<AccumulateAmmoPurchase>("AccumulateAmmoPurchase");
   factory.registerNodeType<ChangeMapAction>("ChangeMapAction");
@@ -117,7 +107,6 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<TrackTargetAction>("TrackTargetAction");
   factory.registerNodeType<SetGimbalPose>("SetGimbalPose", node);
   factory.registerNodeType<SetEnergyAim>("SetEnergyAim");
-  // factory.registerNodeType<SetGimbalPoseByAreaAction>("SetGimbalPoseByAreaAction", zones);
 }
 
 
@@ -131,12 +120,14 @@ bool BtEngine::loadTrees_(const std::string & _tree_dir, const BT::Blackboard::P
     factory_.registerBehaviorTreeFromFile(_tree_dir + "/nav_tree.xml");
     factory_.registerBehaviorTreeFromFile(_tree_dir + "/stance_tree.xml");
     factory_.registerBehaviorTreeFromFile(_tree_dir + "/gimbal_tree.xml");
+    factory_.registerBehaviorTreeFromFile(_tree_dir + "/ul_tree.xml");
 
     resource_tree_ = factory_.createTree("ResourceTree", _blackboard);
     tactical_tree_ = factory_.createTree("TacticalTree", _blackboard);
     nav_tree_ = factory_.createTree("MainTree", _blackboard);
     stance_tree_ = factory_.createTree("StanceTree", _blackboard);
     gimbal_tree_ = factory_.createTree("GimbalTree", _blackboard);
+    ul_tree_ = factory_.createTree("ULTree", _blackboard);
   } catch (const std::exception & ex) {
     throw std::runtime_error(std::string("BtEngine loadTrees failed: ") + ex.what());
   }
@@ -156,6 +147,7 @@ bool BtEngine::initialize(
   nav_latch_ = std::make_unique<BtStatusLatch>(nav_tree_.rootNode());
   stance_latch_ = std::make_unique<BtStatusLatch>(stance_tree_.rootNode());
   gimbal_latch_ = std::make_unique<BtStatusLatch>(gimbal_tree_.rootNode());
+  ul_latch_ = std::make_unique<BtStatusLatch>(ul_tree_.rootNode());
   return true;
 }
 
@@ -171,6 +163,8 @@ void BtEngine::tickOnce()
   stance_tree_.tickOnce();
   gimbal_latch_->beginTick();
   gimbal_tree_.tickOnce();
+  ul_latch_->beginTick();
+  ul_tree_.tickOnce();
 }
 
 }  // namespace rm_decision

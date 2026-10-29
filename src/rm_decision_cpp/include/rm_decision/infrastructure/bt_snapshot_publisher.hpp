@@ -21,7 +21,8 @@ public:
     const BT::Tree & _resource, const BtStatusLatch & _resource_latch,
     const BT::Tree & _tactical, const BtStatusLatch & _tactical_latch, const BT::Tree & _nav,
     const BtStatusLatch & _nav_latch, const BT::Tree & _stance, const BtStatusLatch & _stance_latch,
-    const BT::Tree & _gimbal, const BtStatusLatch & _gimbal_latch, BT::Blackboard & _bb);
+    const BT::Tree & _gimbal, const BtStatusLatch & _gimbal_latch, const BT::Tree & _ul,
+    const BtStatusLatch & _ul_latch, BT::Blackboard & _bb);
 
 private:
   rclcpp::Node & node_;

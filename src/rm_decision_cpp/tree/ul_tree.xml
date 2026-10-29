@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+    <BehaviorTree ID="ULTree">
+        <ReactiveSequence name="ULRoot">
+            <CheckGameTimeWindow name="CheckGameTimeWindow"
+                                min_remaining="0"
+                                max_remaining="300"
+                                require_game_started="false" />
+
+            <ReactiveSequence name="ThroughTunnelBranch">
+                <Script code="spin_enabled := !through_tunnel" />
+                <SetSpinState use_spin="{spin_enabled}" />
+            </ReactiveSequence>
+        
+            <ReactiveFallback name="NavMainBranch">
+            <ReactiveSequence name="SupplyBranch">
+                <CheckHealth threshold="100" mode="less" />
+                <SetCoordinate name="SetHomeGoal" goal="7" />
+                <NavigateToPoseAction name="NavigateToHome" />
+            </ReactiveSequence>
+
+            <ReactiveSequence name="CapturePointBranch">
+                <SetCoordinate name="SetCenterGoal" goal="8" />
+                <NavigateToPoseAction name="NavigateToCenter" />
+            </ReactiveSequence>
+            </ReactiveFallback>
+        </ReactiveSequence>
+    </BehaviorTree>
+</root>

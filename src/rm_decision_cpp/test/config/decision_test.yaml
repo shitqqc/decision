@@ -92,4 +92,6 @@ scenarios:
       y: 2.0
 current:
   scenario: normal
-  overrides: {}
+  overrides:
+    game_info:
+      game_time_remaining: 180

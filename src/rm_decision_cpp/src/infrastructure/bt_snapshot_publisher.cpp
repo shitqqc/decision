@@ -141,10 +141,13 @@ BtSnapshotPublisher::BtSnapshotPublisher(rclcpp::Node & _node, const std::string
 
 
 void BtSnapshotPublisher::publish(
-  const BT::Tree & _resource, const BtStatusLatch & _resource_latch, const BT::Tree & _tactical,
-  const BtStatusLatch & _tactical_latch, const BT::Tree & _nav, const BtStatusLatch & _nav_latch,
-  const BT::Tree & _stance, const BtStatusLatch & _stance_latch, const BT::Tree & _gimbal,
-  const BtStatusLatch & _gimbal_latch, BT::Blackboard & _bb)
+  const BT::Tree & _resource, const BtStatusLatch & _resource_latch, 
+  const BT::Tree & _tactical, const BtStatusLatch & _tactical_latch,
+  const BT::Tree & _nav, const BtStatusLatch & _nav_latch,
+  const BT::Tree & _stance, const BtStatusLatch & _stance_latch, 
+  const BT::Tree & _gimbal,const BtStatusLatch & _gimbal_latch, 
+  const BT::Tree & _ul, const BtStatusLatch & _ul_latch, 
+  BT::Blackboard & _bb)
 {
   const auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::system_clock::now().time_since_epoch())
@@ -157,6 +160,7 @@ void BtSnapshotPublisher::publish(
   root["trees"]["nav"] = serializeTree(_nav, _nav_latch);
   root["trees"]["stance"] = serializeTree(_stance, _stance_latch);
   root["trees"]["gimbal"] = serializeTree(_gimbal, _gimbal_latch);
+  root["trees"]["ul"] = serializeTree(_ul, _ul_latch);
   root["blackboard"] = serializeBlackboard(_bb);
 
   std_msgs::msg::String msg;

@@ -8,6 +8,10 @@ nav_points:
   - {x: 12.1, y: 3.9, yaw: 0.0}    # 5 OWN_OUTPOST
   - {x: 8.8, y: 13.6, yaw: 0.0}    # 6 HERO_GUARD
 
+# for RMUL
+  - {x: 1.2, y: 7.2, yaw: 0.0}     # 7 HOME
+  - {x: 0.0, y: 0.0, yaw: 0.0}     # 8 CENTER
+
 # rects:
 #   - {name: own_supply, min_x: 1.5, max_x: 3.8, min_y: 0.0, max_y: 4.4}
 #   - {name: own_outpost, min_x: 11.1, max_x: 12.4, min_y: 2.5, max_y: 4.5}

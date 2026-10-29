@@ -32,12 +32,14 @@ public:
   const BT::Tree & navTree() const { return nav_tree_; }
   const BT::Tree & stanceTree() const { return stance_tree_; }
   const BT::Tree & gimbalTree() const { return gimbal_tree_; }
+  const BT::Tree & ulTree() const { return ul_tree_; }
 
   const BtStatusLatch & resourceLatch() const { return *resource_latch_; }
   const BtStatusLatch & tacticalLatch() const { return *tactical_latch_; }
   const BtStatusLatch & navLatch() const { return *nav_latch_; }
   const BtStatusLatch & stanceLatch() const { return *stance_latch_; }
   const BtStatusLatch & gimbalLatch() const { return *gimbal_latch_; }
+  const BtStatusLatch & ulLatch() const { return *ul_latch_; }
 
 private:
   void registerNodes_(const ZoneMap * _zones, rclcpp::Node::SharedPtr _node);
@@ -49,11 +51,13 @@ private:
   BT::Tree nav_tree_;
   BT::Tree stance_tree_;
   BT::Tree gimbal_tree_;
+  BT::Tree ul_tree_;
   std::unique_ptr<BtStatusLatch> resource_latch_;
   std::unique_ptr<BtStatusLatch> tactical_latch_;
   std::unique_ptr<BtStatusLatch> nav_latch_;
   std::unique_ptr<BtStatusLatch> stance_latch_;
   std::unique_ptr<BtStatusLatch> gimbal_latch_;
+  std::unique_ptr<BtStatusLatch> ul_latch_;
 };
 
 }  // namespace rm_decision

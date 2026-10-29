@@ -5,16 +5,16 @@
 namespace rm_decision
 {
 
-CheckTargetVisible::CheckTargetVisible(const std::string & n, const BT::NodeConfig & c)
-    : ConditionNode(n, c)
-{
-}
-BT::NodeStatus CheckTargetVisible::tick()
-{
-    bool v = false;
-    (void)config().blackboard->get(BbKey::kTargetValid, v);
-    return v ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-}
+// CheckTargetVisible::CheckTargetVisible(const std::string & n, const BT::NodeConfig & c)
+//     : ConditionNode(n, c)
+// {
+// }
+// BT::NodeStatus CheckTargetVisible::tick()
+// {
+//     bool v = false;
+//     (void)config().blackboard->get(BbKey::kTargetValid, v);
+//     return v ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+// }
 
 /* 
 CheckNearEnemyOutpost::CheckNearEnemyOutpost(
