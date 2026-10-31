@@ -30,6 +30,8 @@
         <RequestRemoteHealthExchangeAction />
       </ReactiveSequence>
 
+      <!-- TODO: 以下两条远程兑换策略当前为停用状态，CheckRemoteExchangeCooldown / RequestRemote*ExchangeAction已实现完成，取消注释即可生效。
+        启用前需确认优先级是否应排在NormalAmmoExchangeBranch之前-->
       <!-- <ReactiveSequence name="RemoteHealthExchangeBranch">
         <CheckEngagedStatus expected="false" />
         <CheckHealth threshold="30" mode="less" />
@@ -39,7 +41,8 @@
         <RequestRemoteHealthExchangeAction />
       </ReactiveSequence> -->
 
-      <!-- P1: 远程弹药兑换（交战中 + 弹药&lt;150 + 金币&gt;=150 + 6s冷却 + 有剩余次数） -->
+      <!-- P1:远程弹药兑换（交战中+弹药&lt;150+金币&gt;=150+6s冷却+有剩余次数）-->
+      <!-- TODO: 注释里写的是6s冷却，实际端口值是8.0，二者不一致，启用前先统一。 -->
       <!-- <ReactiveSequence name="RemoteAmmoExchangeBranch">
         <CheckEngagedStatus expected="true" />
         <CheckAmmoLow ammo_threshold="50" />
@@ -50,7 +53,7 @@
         <RequestRemoteAmmoExchangeAction />
       </ReactiveSequence> -->
 
-      <!-- P2: 普通补给点弹药兑换（弹药&lt;100 + 金币&gt;=100） -->
+      <!-- P2:普通补给点弹药兑换（弹药&lt;100+金币&gt;=100） -->
       <ReactiveSequence name="NormalAmmoExchangeBranch">
         <CheckAmmoLow ammo_threshold="150" />
         <CheckCoinRemaining threshold="100" mode="greater" />

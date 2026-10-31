@@ -78,30 +78,6 @@ BT::NodeStatus SetManualNavGoal::tick()
     return BT::NodeStatus::SUCCESS;
 }
 
-SetTargetCoordinate::SetTargetCoordinate(const std::string & n, const BT::NodeConfig & c)
-    : SyncActionNode(n, c)
-{
-}
-BT::PortsList SetTargetCoordinate::providedPorts()
-{
-    return {
-        BT::InputPort<double>("x", 0.0, ""),
-        BT::InputPort<double>("y", 0.0, ""),
-        BT::InputPort<double>("yaw", 0.0, ""),
-        BT::InputPort<double>("tracing_dist", 0.0, ""),
-    };
-}
-BT::NodeStatus SetTargetCoordinate::tick()
-{
-    double x = 0, y = 0, yaw = 0;
-    (void)getInput("x", x);
-    (void)getInput("y", y);
-    (void)getInput("yaw", yaw);
-    config().blackboard->set(BbKey::kNavGoal, poseFromXyYaw(x, y, yaw));
-    config().blackboard->set(BbKey::kNavGoalValid, true);
-    return BT::NodeStatus::SUCCESS;
-}
-
 SelectPatrolPoint::SelectPatrolPoint(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
     : SyncActionNode(n, c), zones_(z)
 {
@@ -177,21 +153,6 @@ BT::NodeStatus Wait::onRunning()
 //     return BT::NodeStatus::SUCCESS;
 // }
 
-DescendStairsAction::DescendStairsAction(const std::string & n, const BT::NodeConfig & c)
-    : StatefulActionNode(n, c)
-{
-}
-BT::PortsList DescendStairsAction::providedPorts()
-{
-    return {BT::InputPort<double>("duration_sec", 2.0, "")};
-}
-BT::NodeStatus DescendStairsAction::onStart()
-{
-    // TODO(bit-port): timed descend with ros clock
-    return BT::NodeStatus::FAILURE;
-}
-BT::NodeStatus DescendStairsAction::onRunning() { return BT::NodeStatus::FAILURE; }
-
 AccumulateAmmoPurchase::AccumulateAmmoPurchase(const std::string & n, const BT::NodeConfig & c)
     : SyncActionNode(n, c)
 {
@@ -209,36 +170,12 @@ BT::NodeStatus AccumulateAmmoPurchase::tick()
     const double now = nowSec();
     if (last_purchase_sec_ > 0.0 && (now - last_purchase_sec_) < cd)
         return BT::NodeStatus::SUCCESS;
-    
+
     std::uint16_t total = 0;
     (void)config().blackboard->get(BbKey::kAmmoPurchaseTotal, total);
     total = static_cast<std::uint16_t>(total + static_cast<std::uint16_t>(step));
     config().blackboard->set(BbKey::kAmmoPurchaseTotal, total);
     last_purchase_sec_ = now;
-    return BT::NodeStatus::SUCCESS;
-}
-
-ChangeMapAction::ChangeMapAction(const std::string & n, const BT::NodeConfig & c)
-    : SyncActionNode(n, c)
-{
-}
-BT::PortsList ChangeMapAction::providedPorts()
-{
-    return {BT::InputPort<std::string>("map_yaml", "", "")};
-}
-BT::NodeStatus ChangeMapAction::tick()
-{
-    // TODO(bit-port): nav2_msgs/srv/LoadMap
-    return BT::NodeStatus::FAILURE;
-}
-
-EmergencyStop::EmergencyStop(const std::string & n, const BT::NodeConfig & c) : SyncActionNode(n, c)
-{
-}
-BT::NodeStatus EmergencyStop::tick()
-{
-    // TODO(bit-port): preempt cmd_vel
-    config().blackboard->set(BbKey::kNavGoalValid, false);
     return BT::NodeStatus::SUCCESS;
 }
 } // namespace rm_decision

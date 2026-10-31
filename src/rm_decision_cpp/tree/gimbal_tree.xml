@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
   <BehaviorTree ID="GimbalTree">
+    <!-- TODO(云台控制): enable 是启用/关闭云台控制的开关。
+         节点命名与 enable 保持一致：
+           Set...（enable="true"）：接管云台，按 yaw/pitch 转；
+           Release...（enable="false"）：交还控制权，yaw/pitch 不生效。
+         注意 SetGimbalPose 恒返回 SUCCESS，所以它不能作为 ReactiveFallback 中无条件的中间子节点，否则会短路后面所有分支。还有角度一定要统一单位。
+         自瞄追击应插在 <ReactiveFallback name="GimbalPriorityRoot"> 的第一优先级：
+         目标有效时用 TrackTargetAction（按自瞄目标位置+距离发航点追击，不下发云台角），无效时再落到下面的扫描分支。 -->
     <ReactiveSequence name="GimbalRoot">
       <SetEnergyAim aim_mode="2" hold_sec="15" include_active="true" />
 
@@ -8,30 +15,27 @@
         <ReactiveSequence name="Priority1SpecialResponseScan">
           <CheckOutpostTarget name="CheckGimbalOutpostTarget"
                               goal_distance_threshold="0.5" />
-          <SetGimbalPose name="SetOutpostInspectPose" mode="1" yaw="0.22" pitch="0.0" />
+          <SetGimbalPose name="SetOutpostInspectPose" enable="true" yaw="0.22" pitch="0.0" />
         </ReactiveSequence>
 
-        <SetGimbalPose name="SetDefaultInspectPose" mode="0"/>
-
         <ReactiveSequence name="Priority2NormalScan">
-          <SetGimbalPose name="SetNormalInspectPose" mode="0" />
+          <SetGimbalPose name="ReleaseGimbalNormal" enable="false" />
           <ReactiveFallback name="GimbalScanStrategy">
             <ReactiveSequence name="EnergyGimbalScan">
               <CheckEnergyActive />
-              <SetGimbalPose name="SetEnergyGimbal" mode="1" yaw="38.78" pitch="0.0" />
+              <SetGimbalPose name="SetEnergyGimbal" enable="true" yaw="38.78" pitch="0.0" />
             </ReactiveSequence>
 
             <!-- <ReactiveSequence name="DefendScan">
               <CheckTacticalModeCondition mode="defend" />
-              <SetGimbalPoseByAreaAction name="SetDefendGimbal" />
             </ReactiveSequence> -->
 
             <ReactiveSequence name="AttackScan">
               <CheckTacticalModeCondition mode="attack" />
-              <SetGimbalPose name="SetAttackGimbal" mode="0" />
+              <SetGimbalPose name="ReleaseGimbalAttack" enable="false" />
             </ReactiveSequence>
 
-            <SetGimbalPose name="SetNormalGimbal" mode="0" />
+            <SetGimbalPose name="ReleaseGimbalDefault" enable="false" />
           </ReactiveFallback>
         </ReactiveSequence>
       </ReactiveFallback>

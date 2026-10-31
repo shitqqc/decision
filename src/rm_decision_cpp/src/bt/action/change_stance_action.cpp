@@ -24,12 +24,7 @@ static std::uint8_t parseStance(const std::string & s)
 SetSpinState::SetSpinState(const std::string & n, const BT::NodeConfig & c) : SyncActionNode(n, c)
 {
 }
-BT::PortsList SetSpinState::providedPorts()
-{
-    return {
-        BT::InputPort<bool>("use_spin", false, "")
-    };
-}
+BT::PortsList SetSpinState::providedPorts() { return {BT::InputPort<bool>("use_spin", false, "")}; }
 BT::NodeStatus SetSpinState::tick()
 {
     bool use = false;
@@ -71,8 +66,7 @@ ChangeStance::ChangeStance(const std::string & n, const BT::NodeConfig & c)
 BT::PortsList ChangeStance::providedPorts()
 {
     return {
-        BT::InputPort<std::string>("stance", "MOVE", ""),
-        BT::InputPort<double>("cooldown", 5.0, "")};
+        BT::InputPort<std::string>("stance", "MOVE", ""), BT::InputPort<double>("cooldown", 5.0, "")};
 }
 BT::NodeStatus ChangeStance::onStart()
 {
@@ -110,8 +104,8 @@ UpdateStanceDuration::UpdateStanceDuration(const std::string & n, const BT::Node
     : SyncActionNode(n, c)
 {
 }
-BT::NodeStatus UpdateStanceDuration::tick() 
-{ 
+BT::NodeStatus UpdateStanceDuration::tick()
+{
     int current_time = 0;
     std::uint8_t game_progress = 0;
     (void)config().blackboard->get(BbKey::kGameTimeRemaining, current_time);

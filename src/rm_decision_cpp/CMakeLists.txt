@@ -51,12 +51,12 @@ set(DECISION_SOURCES
   src/bt/action/resource_actions.cpp
   src/bt/action/change_stance_action.cpp
   src/bt/action/gimbal_action.cpp
-  src/bt/action/recovery_actions.cpp
   src/bt/condition/auto_conditions.cpp
-  src/bt/condition/tactical_condition.cpp
+  src/bt/condition/attack_condition.cpp
   src/bt/condition/resource_conditions.cpp
-  src/bt/condition/change_stance_condition.cpp
-  src/bt/condition/gimbal_condition.cpp
+  src/bt/condition/combat_conditions.cpp
+  src/bt/condition/stance_conditions.cpp
+  src/bt/condition/target_condition.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${DECISION_SOURCES})

@@ -6,12 +6,11 @@
 namespace rm_decision
 {
 
-class INavInfoIngress
-{
+class INavInfoIngress {
 public:
-  virtual ~INavInfoIngress() = default;
+    virtual ~INavInfoIngress() = default;
 
-  virtual void update(BT::Blackboard & _bb) = 0;
+    virtual void update(BT::Blackboard & _bb) = 0;
 };
 
 } // namespace rm_decision

@@ -52,9 +52,15 @@ BT::NodeStatus CheckGameTimeWindow::tick()
     std::uint8_t p = 0;
     (void)config().blackboard->get(BbKey::kGameTimeRemaining, t);
     (void)config().blackboard->get(BbKey::kGameProgress, p);
+    // TODO: require_game_started=false 时本节点完全不看 game_progress，只比较时间窗。
+    // 赛前 game_time_remaining 为 0，只要 [min_remaining, max_remaining] 覆盖 0 就返回 SUCCESS。
+    // tree/ul_tree.xml 现在正是这么配的（min_remaining=0 + require_game_started=false），
+    // 结果本树在【赛前】就命中，车会提前开去 HOME。
+    // 若要表达「比赛中」，调用方应传 true；若确实想保留 false，这里还应额外要求
+    // game_progress != 0（赛前），避免把 0 秒误当成合法的比赛时间。
     if (require && p != 4u)
         return BT::NodeStatus::FAILURE;
-        
+
     return (t >= min_r && t <= max_r) ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
@@ -107,7 +113,7 @@ BT::NodeStatus CheckTacticalMode::tick()
     (void)getInput("mode", want);
     std::uint8_t mode = 0;
     (void)config().blackboard->get(BbKey::kTacticalMode, mode);
-    
+
     TacticalMode_e expect = TacticalMode_e::Normal;
     if (want == "attack")
         expect = TacticalMode_e::Attack;
@@ -329,22 +335,6 @@ BT::NodeStatus CheckOutpostAttackState::tick()
     return active ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
-SetEnemyOutpostDestroyed::SetEnemyOutpostDestroyed(const std::string & n, const BT::NodeConfig & c)
-    : ConditionNode(n, c)
-{
-}
-BT::PortsList SetEnemyOutpostDestroyed::providedPorts()
-{
-    return {BT::InputPort<bool>("value", true, "")};
-}
-BT::NodeStatus SetEnemyOutpostDestroyed::tick()
-{
-    bool v = true;
-    (void)getInput("value", v);
-    config().blackboard->set(BbKey::kEnemyOutpostDestroyed, v);
-    return BT::NodeStatus::SUCCESS;
-}
-
 CheckHeroGuardActive::CheckHeroGuardActive(const std::string & n, const BT::NodeConfig & c)
     : ConditionNode(n, c)
 {
@@ -354,27 +344,6 @@ BT::NodeStatus CheckHeroGuardActive::tick()
     bool v = false;
     (void)config().blackboard->get(BbKey::kHeroGuardActive, v);
     return v ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-}
-
-SetHeroGuardActive::SetHeroGuardActive(const std::string & n, const BT::NodeConfig & c)
-    : ConditionNode(n, c)
-{
-}
-BT::PortsList SetHeroGuardActive::providedPorts()
-{
-    return {BT::InputPort<bool>("active", true, ""), BT::InputPort<bool>("exit_nav_mode", false, "")};
-}
-BT::NodeStatus SetHeroGuardActive::tick()
-{
-    bool v = true;
-    bool exit_nav = false;
-    (void)getInput("active", v);
-    (void)getInput("exit_nav_mode", exit_nav);
-    config().blackboard->set(BbKey::kHeroGuardActive, v);
-    if (exit_nav) {
-        config().blackboard->set(BbKey::kNavMode, static_cast<std::uint8_t>(NavMode_e::Patrol));
-    }
-    return BT::NodeStatus::SUCCESS;
 }
 
 UpdateHighlandFallbackState::UpdateHighlandFallbackState(const std::string & n, const BT::NodeConfig & c)
@@ -428,23 +397,23 @@ BT::NodeStatus CheckOutpostSafeResponse::tick()
     return hp >= min_hp ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 
-// CheckTargetArmorId::CheckTargetArmorId(const std::string & n, const BT::NodeConfig & c)
-//     : ConditionNode(n, c)
-// {
-// }
-// BT::PortsList CheckTargetArmorId::providedPorts()
-// {
-//     return {BT::InputPort<int>("armor_id", 0, ""), BT::InputPort<int>("target_id", 0, "")};
-// }
-// BT::NodeStatus CheckTargetArmorId::tick()
-// {
-//     int want = 0;
-//     if (!getInput("target_id", want))
-//         (void)getInput("armor_id", want);
-//     int id = -1;
-//     (void)config().blackboard->get(BbKey::kTargetArmorId, id);
-//     return id == want ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-// }
+CheckTargetArmorId::CheckTargetArmorId(const std::string & n, const BT::NodeConfig & c)
+    : ConditionNode(n, c)
+{
+}
+BT::PortsList CheckTargetArmorId::providedPorts()
+{
+    return {BT::InputPort<int>("armor_id", 0, ""), BT::InputPort<int>("target_id", 0, "")};
+}
+BT::NodeStatus CheckTargetArmorId::tick()
+{
+    int want = 0;
+    if (!getInput("target_id", want))
+        (void)getInput("armor_id", want);
+    int id = -1;
+    (void)config().blackboard->get(BbKey::kTargetArmorId, id);
+    return id == want ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+}
 
 // CheckInStairsZone::CheckInStairsZone(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
 //     : ConditionNode(n, c) , zones_(z)
@@ -471,16 +440,6 @@ BT::NodeStatus CheckOutpostSafeResponse::tick()
 //     return zones_->inZone(name, x, y) ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 //     return BT::NodeStatus::FAILURE;
 // }
-
-CheckNoAllyBelowStairs::CheckNoAllyBelowStairs(const std::string & n, const BT::NodeConfig & c)
-    : ConditionNode(n, c)
-{
-}
-BT::NodeStatus CheckNoAllyBelowStairs::tick()
-{
-    // TODO(bit-port): needs allies_info ingress
-    return BT::NodeStatus::SUCCESS;
-}
 
 // CheckOwnFortIdle::CheckOwnFortIdle(const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
 //     : ConditionNode(n, c), zones_(z)

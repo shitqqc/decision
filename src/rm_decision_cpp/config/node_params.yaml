@@ -5,8 +5,7 @@
     enable_bt_monitor: true
     bt_snapshot_topic: "bt_snapshot"
 
-    game_info_topic_name: "game_info"
-    odom_topic: "/odom"
+    game_info_topic: "game_info"
     sentry_cmd_topic: "sentry_cmd"
     use_spin_topic: "/nav/use_spin"
     energy_aim_topic: "energy_aim_mode"
@@ -14,3 +13,6 @@
     gimbal_pose_topic: "/nav/gimbal_pose"
     # empty = share/rm_decision_cpp/config/zones.yaml
     zones_yaml: ""
+    # TODO: 添加 match_type（rmul / rmuc）参数。
+    # 加参数后由 decision_app 读取并传给 BtEngine::initialize，按值只 register + create
+    # match_type: "rmuc"

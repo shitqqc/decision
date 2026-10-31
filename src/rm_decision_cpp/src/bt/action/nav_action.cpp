@@ -19,7 +19,8 @@ bool parseViaIds(const std::string & _text, std::vector<int> * _ids)
 {
     _ids->clear();
     std::string token;
-    auto flush = [&]() -> bool {
+    auto flush = [&]() -> bool
+    {
         if (token.empty()) {
             return true;
         }
@@ -48,8 +49,7 @@ bool parseViaIds(const std::string & _text, std::vector<int> * _ids)
     return flush();
 }
 
-template <typename HandleT>
-BT::NodeStatus statusOf(HandleT & _handle)
+template <typename HandleT> BT::NodeStatus statusOf(HandleT & _handle)
 {
     if (!_handle) {
         return BT::NodeStatus::FAILURE;
@@ -59,20 +59,19 @@ BT::NodeStatus statusOf(HandleT & _handle)
         _handle.reset();
         return BT::NodeStatus::SUCCESS;
     }
-    if (
-        st == action_msgs::msg::GoalStatus::STATUS_ABORTED ||
-        st == action_msgs::msg::GoalStatus::STATUS_CANCELED)
-    {
+    if (st == action_msgs::msg::GoalStatus::STATUS_ABORTED ||
+        st == action_msgs::msg::GoalStatus::STATUS_CANCELED) {
         _handle.reset();
         return BT::NodeStatus::FAILURE;
     }
     return BT::NodeStatus::RUNNING;
 }
 
-}  // namespace
+} // namespace
 
 NavigateToPoseAction::NavigateToPoseAction(
-    const std::string & n, const BT::NodeConfig & c, rclcpp::Node::SharedPtr node, const ZoneMap * zones)
+    const std::string & n, const BT::NodeConfig & c, rclcpp::Node::SharedPtr node,
+    const ZoneMap * zones)
     : StatefulActionNode(n, c), node_(std::move(node)), zones_(zones)
 {
     client_ =
@@ -164,10 +163,8 @@ BT::NodeStatus NavigateToPoseAction::onStart()
         nav2_msgs::action::NavigateToPose::Goal goal;
         goal.pose = goal_pose;
         auto future = client_->async_send_goal(goal);
-        if (
-            rclcpp::spin_until_future_complete(node_, future, std::chrono::seconds(3)) !=
-            rclcpp::FutureReturnCode::SUCCESS)
-        {
+        if (rclcpp::spin_until_future_complete(node_, future, std::chrono::seconds(3)) !=
+            rclcpp::FutureReturnCode::SUCCESS) {
             return BT::NodeStatus::FAILURE;
         }
         goal_handle_ = future.get();
@@ -185,10 +182,8 @@ BT::NodeStatus NavigateToPoseAction::onStart()
     }
     goal.poses.push_back(goal_pose);
     auto future = through_client_->async_send_goal(goal);
-    if (
-        rclcpp::spin_until_future_complete(node_, future, std::chrono::seconds(3)) !=
-        rclcpp::FutureReturnCode::SUCCESS)
-    {
+    if (rclcpp::spin_until_future_complete(node_, future, std::chrono::seconds(3)) !=
+        rclcpp::FutureReturnCode::SUCCESS) {
         return BT::NodeStatus::FAILURE;
     }
     through_handle_ = future.get();
@@ -208,8 +203,5 @@ BT::NodeStatus NavigateToPoseAction::onRunning()
     }
     return BT::NodeStatus::FAILURE;
 }
-void NavigateToPoseAction::onHalted()
-{
-    cancelActive_();
-}
-}  // namespace rm_decision
+void NavigateToPoseAction::onHalted() { cancelActive_(); }
+} // namespace rm_decision

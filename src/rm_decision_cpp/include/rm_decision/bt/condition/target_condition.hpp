@@ -29,4 +29,4 @@ namespace rm_decision
 //   const ZoneMap * zones_;
 // };
 
-}  // namespace rm_decision
+} // namespace rm_decision

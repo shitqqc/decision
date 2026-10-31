@@ -1,7 +1,5 @@
 #pragma once
 
-#include "rm_decision/domain/zone_map.hpp"
-
 #include <behaviortree_cpp/action_node.h>
 #include <decision_interfaces/msg/gimbal_pose.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -12,51 +10,36 @@
 namespace rm_decision
 {
 
-class TrackTargetAction : public BT::StatefulActionNode
-{
+class TrackTargetAction : public BT::StatefulActionNode {
 public:
-  TrackTargetAction(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts() { return {}; }
-  BT::NodeStatus onStart() override;
-  BT::NodeStatus onRunning() override;
-  void onHalted() override {}
+    TrackTargetAction(const std::string & _name, const BT::NodeConfig & _config);
+    static BT::PortsList providedPorts() { return {}; }
+    BT::NodeStatus onStart() override;
+    BT::NodeStatus onRunning() override;
+    void onHalted() override {}
 };
 
-class SetGimbalPose : public BT::SyncActionNode
-{
+class SetGimbalPose : public BT::SyncActionNode {
 public:
-  SetGimbalPose(
-    const std::string & _name, const BT::NodeConfig & _config, rclcpp::Node::SharedPtr _node);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+    SetGimbalPose(
+        const std::string & _name, const BT::NodeConfig & _config, rclcpp::Node::SharedPtr _node);
+    static BT::PortsList providedPorts();
+    BT::NodeStatus tick() override;
 
 private:
-  rclcpp::Node::SharedPtr node_;
-  rclcpp::Publisher<decision_interfaces::msg::GimbalPose>::SharedPtr gimbal_pose_pub_;
+    rclcpp::Node::SharedPtr node_;
+    rclcpp::Publisher<decision_interfaces::msg::GimbalPose>::SharedPtr gimbal_pose_pub_;
 };
 
-class SetEnergyAim : public BT::SyncActionNode
-{
+class SetEnergyAim : public BT::SyncActionNode {
 public:
-  SetEnergyAim(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+    SetEnergyAim(const std::string & _name, const BT::NodeConfig & _config);
+    static BT::PortsList providedPorts();
+    BT::NodeStatus tick() override;
 
 private:
-  bool window_open_{false};
-  double start_sec_{-1.0};
+    bool window_open_{false};
+    double start_sec_{-1.0};
 };
 
-// class SetGimbalPoseByAreaAction : public BT::SyncActionNode
-// {
-// public:
-//   SetGimbalPoseByAreaAction(
-//     const std::string & _name, const BT::NodeConfig & _config, const ZoneMap * _zones);
-//   static BT::PortsList providedPorts();
-//   BT::NodeStatus tick() override;
-
-// private:
-//   const ZoneMap * zones_;
-// };
-
-}  // namespace rm_decision
+} // namespace rm_decision

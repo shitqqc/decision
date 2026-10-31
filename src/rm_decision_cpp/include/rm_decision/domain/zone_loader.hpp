@@ -13,4 +13,4 @@ bool loadZoneMapFromYaml(const std::string & _path, ZoneMap * _out, std::string 
 /// Hardcoded RMUC defaults (bit area.hpp).
 void loadDefaultRmucZones(ZoneMap * _out);
 
-}  // namespace rm_decision
+} // namespace rm_decision

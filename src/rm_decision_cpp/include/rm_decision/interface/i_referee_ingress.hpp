@@ -7,12 +7,11 @@
 namespace rm_decision
 {
 
-class IRefereeIngress
-{
+class IRefereeIngress {
 public:
-  virtual ~IRefereeIngress() = default;
+    virtual ~IRefereeIngress() = default;
 
-  virtual void update(BT::Blackboard & _bb) = 0;
+    virtual void update(BT::Blackboard & _bb) = 0;
 };
 
-}  // namespace rm_decision
+} // namespace rm_decision

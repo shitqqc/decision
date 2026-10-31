@@ -5,13 +5,12 @@
 namespace rm_decision
 {
 
-class ICommandEgress
-{
+class ICommandEgress {
 public:
-  virtual ~ICommandEgress() = default;
+    virtual ~ICommandEgress() = default;
 
-  /// Publish SentryCmd / use_spin from blackboard desires.
-  virtual void publish(const BT::Blackboard & _bb) = 0;
+    /// Publish SentryCmd / use_spin from blackboard desires.
+    virtual void publish(const BT::Blackboard & _bb) = 0;
 };
 
-}  // namespace rm_decision
+} // namespace rm_decision

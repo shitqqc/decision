@@ -14,8 +14,7 @@ double nowSec()
     const auto now = std::chrono::steady_clock::now().time_since_epoch();
     return std::chrono::duration_cast<std::chrono::duration<double>>(now).count();
 }
-}  // namespace
-
+} // namespace
 
 TrackTargetAction::TrackTargetAction(const std::string & n, const BT::NodeConfig & c)
     : StatefulActionNode(n, c)
@@ -25,7 +24,37 @@ BT::NodeStatus TrackTargetAction::onStart()
 {
     bool v = false;
     (void)config().blackboard->get(BbKey::kTargetValid, v);
-    // TODO: gimbal egress not wired
+    // TODO: 自瞄追击链路。
+    // 云台在追击期间由自瞄自己闭环，决策只在观测时用 SetGimbalPose 发固定角度。
+    // 本节点把自瞄给的目标位置换算成 map 系航点，交给导航去追击。
+    // 订阅 /tracker/target（rm_interfaces/msg/Target，SensorData QoS）：
+    //   header.frame_id = "odom"（rm_tracker 的 target_frame 参数）
+    //   tracking       bool      是否有目标
+    //   position       Point     目标中心，【odom 系】，单位 m  ← 直接可用
+    //   velocity       Vector3   odom 系速度
+    //   id             string    "one".."five" / "sentry" / "base" / "outpost"
+    //   yaw / v_yaw / radius / armors_num / visiable_num / dr1-3 / dz1-3
+    // 该消息没有 distance 字段，距离要自己算。
+    // 要做的事
+    //   1. AutoAimIngress 订阅 /tracker/target，写 kTargetValid = tracking，
+    //      并把 position 转成 map 系后写 kTargetPoseX / kTargetPoseY；
+    //      超时（如 0.2s 无新消息）时 kTargetValid = false。
+    //   2. 坐标系：自瞄是 odom，nav2 的 global_frame 是 map（pb2025_nav_bringup/config），
+    //      本包 poseFromXyYaw 也写 frame_id = "map"。所以只需 map <- odom 一次变换，
+    //      用 tf2_ros::Buffer::transform() 即可（tf2_ros 在 jazzy 里有，但本包
+    //      CMakeLists/package.xml 目前只依赖 tf2，需要补 tf2_ros）。
+    //      注意：不需要「车体系角 -> map」的反算，也不需要 OdomPoseIngress 提供本车位姿。
+    //   3. 距离：kTargetDistance = hypot(目标 map 坐标 - 本车 map 坐标)，
+    //      本车坐标可用 tf2 查 map <- base_link；若只做距离门限也可直接用 odom 系差值。
+    //   4. 航点：沿「本车 -> 目标」方向回退 standoff 距离，写入 kNavGoal（poseFromXyYaw）
+    //      并置 kNavGoalValid = true，由 NavigateToPoseAction 执行。
+    //   5. 距离门限：kTargetDistance <= keep_dist 时置 kNavGoalValid = false 停车，
+    //      只让自瞄转云台，避免顶到目标。
+    //   6. 目标丢失/超时 -> 返回 FAILURE，让树回落到扫描分支。
+    // onRunning() 里按目标移动重算航点。
+    //
+    // 注意：本节点不写 kGimbalYawCmd / kGimbalPitchCmd / kGimbalEnabled；
+    // 追击时云台归自瞄，若同时写会两边抢控制权导致云台抖动。
     return v ? BT::NodeStatus::RUNNING : BT::NodeStatus::FAILURE;
 }
 BT::NodeStatus TrackTargetAction::onRunning()
@@ -35,35 +64,39 @@ BT::NodeStatus TrackTargetAction::onRunning()
     return v ? BT::NodeStatus::RUNNING : BT::NodeStatus::FAILURE;
 }
 
-SetGimbalPose::SetGimbalPose(
-    const std::string & n, const BT::NodeConfig & c, rclcpp::Node::SharedPtr node)
+SetGimbalPose::SetGimbalPose(const std::string & n, const BT::NodeConfig & c, rclcpp::Node::SharedPtr node)
     : SyncActionNode(n, c), node_(std::move(node))
 {
     const std::string topic =
         node_->get_parameter_or<std::string>("gimbal_pose_topic", "/nav/gimbal_pose");
-    gimbal_pose_pub_ = node_->create_publisher<decision_interfaces::msg::GimbalPose>(
-        topic, rclcpp::QoS(10));
+    gimbal_pose_pub_ =
+        node_->create_publisher<decision_interfaces::msg::GimbalPose>(topic, rclcpp::QoS(10));
 }
 BT::PortsList SetGimbalPose::providedPorts()
 {
     return {
-        BT::InputPort<float>("yaw", 0.f, ""),
-        BT::InputPort<float>("pitch", 0.f, ""),
-        BT::InputPort<int>("mode", 1, ""),
+        BT::InputPort<float>("yaw", 0.f, "目标云台 yaw"),
+        BT::InputPort<float>("pitch", 0.f, "目标云台 pitch"),
+        BT::InputPort<bool>("enable", true, "true=接管云台；false=交还控制权，yaw/pitch 不生效"),
     };
 }
 BT::NodeStatus SetGimbalPose::tick()
 {
     float yaw = 0, pitch = 0;
-    int mode = 1;
+    bool enable = true;
     (void)getInput("yaw", yaw);
     (void)getInput("pitch", pitch);
-    (void)getInput("mode", mode);
+    (void)getInput("enable", enable);
     config().blackboard->set(BbKey::kGimbalYawCmd, yaw);
     config().blackboard->set(BbKey::kGimbalPitchCmd, pitch);
-    config().blackboard->set(BbKey::kPitchMode, mode);
+    config().blackboard->set(BbKey::kGimbalEnabled, enable);
+    // TODO: 云台输出这里只写 blackboard，发布动作应交给 SentryCmdEgress。
+    // 现在直接 publish，导致输出通道分裂（ICommandEgress 之外的唯一例外），
+    // 也让 TrackTargetAction 将来自瞄接管云台时无法统一出口。
+    // SentryCmdEgress 增加 gimbal_pose_pub_（见对应的 TODO）；
+    // 删掉本节点里的 gimbal_pose_pub_ 与 create_publisher，节点只保留上面的 set()；
     decision_interfaces::msg::GimbalPose msg;
-    msg.mode = mode;
+    msg.enable = enable;
     msg.yaw = yaw;
     msg.pitch = pitch;
     gimbal_pose_pub_->publish(msg);
@@ -76,10 +109,8 @@ SetEnergyAim::SetEnergyAim(const std::string & n, const BT::NodeConfig & c) : Sy
 BT::PortsList SetEnergyAim::providedPorts()
 {
     return {
-        BT::InputPort<int>("aim_mode", 2, ""),
-        BT::InputPort<double>("hold_sec", 15.0, ""),
-        BT::InputPort<bool>("include_active", false, "")
-    };
+        BT::InputPort<int>("aim_mode", 2, ""), BT::InputPort<double>("hold_sec", 15.0, ""),
+        BT::InputPort<bool>("include_active", false, "")};
 }
 BT::NodeStatus SetEnergyAim::tick()
 {
@@ -116,22 +147,5 @@ BT::NodeStatus SetEnergyAim::tick()
     config().blackboard->set(BbKey::kEnergyAimMode, mode);
     return BT::NodeStatus::SUCCESS;
 }
-
-// SetGimbalPoseByAreaAction::SetGimbalPoseByAreaAction(
-//     const std::string & n, const BT::NodeConfig & c, const ZoneMap * z)
-//     : SyncActionNode(n, c), zones_(z)
-// {
-// }
-// BT::PortsList SetGimbalPoseByAreaAction::providedPorts()
-// {
-//     return {BT::InputPort<std::string>("area", "enemy_outpost", "")};
-// }
-// BT::NodeStatus SetGimbalPoseByAreaAction::tick()
-// {
-//     (void)zones_;
-//     config().blackboard->set(BbKey::kPitchMode, 1);
-//     // TODO: area-based scan limits
-//     return BT::NodeStatus::SUCCESS;
-// }
 
 } // namespace rm_decision

@@ -10,28 +10,6 @@
                                   enhanced_defend_seconds="5.0"
                                   max_retreat_count="3" />
       </ForceSuccess>
-      <!-- TEMP_DISABLED_HIGHLAND_GUARD: 暂停普通英雄守护的自动开启/关闭时间窗。
-      <ForceSuccess>
-        <ReactiveSequence name="AutoHeroGuardEnableWindow">
-          <CheckGameTimeWindow name="CheckAutoHeroGuardEnableWindow"
-                               min_remaining="260"
-                               max_remaining="280" />
-          <SetHeroGuardActive name="SetAutoHeroGuardActive"
-                              active="true" />
-        </ReactiveSequence>
-      </ForceSuccess>
-      <ForceSuccess>
-        <ReactiveSequence name="AutoHeroGuardDisableWindow">
-          <CheckGameTimeWindow name="CheckAutoHeroGuardDisableWindow"
-                               min_remaining="180"
-                               max_remaining="190"
-                               require_game_started="false" />
-          <SetHeroGuardActive name="SetAutoHeroGuardInactive"
-                              active="false"
-                              exit_nav_mode="true" />
-        </ReactiveSequence>
-      </ForceSuccess>
-      -->
       <!-- TEMP_DISABLED_HIGHLAND_GUARD: 暂停前80秒未上高地后的兜底状态锁存。 -->
       <ForceSuccess>
         <UpdateHighlandFallbackState name="UpdateHighlandFallbackState"
@@ -232,13 +210,6 @@
                 <NavigateToPoseAction name="NavigateHeroGuard" />
               </ForceSuccess>
             </ReactiveSequence>
-
-            <!-- <ReactiveSequence name="EarlyTargetAttack">
-              <ReactiveSequence name="EarlyTargetPursuit">
-                <SetTargetCoordinate name="SetEarlyTargetCoordinate" tracing_dist="1.0"/>
-                <NavigateToPoseAction name="NavigateEarlyTrackingTarget" />
-              </ReactiveSequence>
-            </ReactiveSequence> -->
 
             <ReactiveSequence name="EarlyGameSpecialResponse">
               <CheckGameTimeWindow name="CheckEarlyGameSpecialWindow"

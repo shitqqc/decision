@@ -14,29 +14,28 @@
 namespace rm_decision
 {
 
-class DecisionApp
-{
+class DecisionApp {
 public:
-  explicit DecisionApp(rclcpp::Node::SharedPtr _node);
+    explicit DecisionApp(rclcpp::Node::SharedPtr _node);
 
-  bool start();
-  void spinLoop();
+    bool start();
+    void spinLoop();
 
 private:
-  void initDefaults_(BT::Blackboard & _bb);
+    void initDefaults_(BT::Blackboard & _bb);
 
-  rclcpp::Node::SharedPtr node_;
-  std::unique_ptr<IRefereeIngress> referee_;
-  // std::unique_ptr<INavInfoIngress> pose_;
-  std::unique_ptr<INavInfoIngress> tunnel_;
-  std::unique_ptr<ICommandEgress> command_;
-  std::unique_ptr<BtSnapshotPublisher> snapshot_;
-  ZoneMap zones_;
+    rclcpp::Node::SharedPtr node_;
+    std::unique_ptr<IRefereeIngress> referee_;
+    // std::unique_ptr<INavInfoIngress> pose_;
+    std::unique_ptr<INavInfoIngress> tunnel_;
+    std::unique_ptr<ICommandEgress> command_;
+    std::unique_ptr<BtSnapshotPublisher> snapshot_;
+    ZoneMap zones_;
 
-  BT::Blackboard::Ptr blackboard_;
-  BtEngine engine_;
-  int tick_period_ms_{100};
-  bool enable_bt_monitor_{true};
+    BT::Blackboard::Ptr blackboard_;
+    BtEngine engine_;
+    int tick_period_ms_{100};
+    bool enable_bt_monitor_{true};
 };
 
-}  // namespace rm_decision
+} // namespace rm_decision

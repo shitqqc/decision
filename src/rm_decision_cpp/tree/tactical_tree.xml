@@ -17,11 +17,6 @@
         <SetTacticalMode name="SetAttackMode" mode="attack" />
       </Sequence>
 
-      <!-- <Sequence name="DefendPriority">
-        <CheckDefendCondition name="CheckDefendCondition" />
-        <SetTacticalMode name="SetDefendMode" mode="defend" />
-      </Sequence> -->
-
       <SetTacticalMode name="SetNormalMode" mode="normal" />
     </ReactiveFallback>
   </BehaviorTree>

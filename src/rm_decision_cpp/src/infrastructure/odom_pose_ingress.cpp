@@ -42,4 +42,4 @@ void OdomPoseIngress::update(BT::Blackboard & _bb)
 }
 */
 
-}  // namespace rm_decision
+} // namespace rm_decision

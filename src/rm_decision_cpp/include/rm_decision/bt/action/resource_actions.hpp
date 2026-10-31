@@ -7,39 +7,34 @@
 namespace rm_decision
 {
 
-class RequestRevive : public BT::SyncActionNode
-{
+class RequestRevive : public BT::SyncActionNode {
 public:
-  RequestRevive(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+    RequestRevive(const std::string & _name, const BT::NodeConfig & _config);
+    static BT::PortsList providedPorts();
+    BT::NodeStatus tick() override;
 };
 
-/// Alias closer to bit naming.
 using RequestReviveAction = RequestRevive;
 
-class ClearRevive : public BT::SyncActionNode
-{
+class ClearRevive : public BT::SyncActionNode {
 public:
-  ClearRevive(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts() { return {}; }
-  BT::NodeStatus tick() override;
+    ClearRevive(const std::string & _name, const BT::NodeConfig & _config);
+    static BT::PortsList providedPorts() { return {}; }
+    BT::NodeStatus tick() override;
 };
 
-class RequestRemoteAmmoExchangeAction : public BT::SyncActionNode
-{
+class RequestRemoteAmmoExchangeAction : public BT::SyncActionNode {
 public:
-  RequestRemoteAmmoExchangeAction(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+    RequestRemoteAmmoExchangeAction(const std::string & _name, const BT::NodeConfig & _config);
+    static BT::PortsList providedPorts();
+    BT::NodeStatus tick() override;
 };
 
-class RequestRemoteHealthExchangeAction : public BT::SyncActionNode
-{
+class RequestRemoteHealthExchangeAction : public BT::SyncActionNode {
 public:
-  RequestRemoteHealthExchangeAction(const std::string & _name, const BT::NodeConfig & _config);
-  static BT::PortsList providedPorts();
-  BT::NodeStatus tick() override;
+    RequestRemoteHealthExchangeAction(const std::string & _name, const BT::NodeConfig & _config);
+    static BT::PortsList providedPorts();
+    BT::NodeStatus tick() override;
 };
 
-}  // namespace rm_decision
+} // namespace rm_decision

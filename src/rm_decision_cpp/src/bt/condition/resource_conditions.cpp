@@ -56,7 +56,7 @@ BT::NodeStatus CheckCoinRemaining::tick()
 
     int coin = 0;
     (void)config().blackboard->get(BbKey::kCoinRemaining, coin);
-    
+
     return ((mode == "less") ? (coin < thr) : (coin > thr)) ? BT::NodeStatus::SUCCESS
                                                             : BT::NodeStatus::FAILURE;
 }
@@ -123,35 +123,6 @@ BT::NodeStatus CheckInZone::tick()
 }
 */
 
-CheckEngagedSafeResponse::CheckEngagedSafeResponse(const std::string & n, const BT::NodeConfig & c)
-    : ConditionNode(n, c)
-{
-}
-BT::PortsList CheckEngagedSafeResponse::providedPorts()
-{
-    return {
-        BT::InputPort<double>("safe_duration_sec", 3.0, ""),
-        BT::InputPort<bool>("expected_engaged", true, "")};
-}
-BT::NodeStatus CheckEngagedSafeResponse::tick()
-{
-    double dur = 3.0;
-    bool expected = true;
-    (void)getInput("safe_duration_sec", dur);
-    (void)getInput("expected_engaged", expected);
-    bool disengaged = false;
-    (void)config().blackboard->get(BbKey::kIsDisengaged, disengaged);
-    const bool engaged = !disengaged;
-    if (engaged != expected) {
-        engaged_since_sec_ = -1.0;
-        return BT::NodeStatus::FAILURE;
-    }
-    const double t = nowSec();
-    if (engaged_since_sec_ < 0)
-        engaged_since_sec_ = t;
-    return (t - engaged_since_sec_ >= dur) ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
-}
-
 CheckRemoteExchangeCooldown::CheckRemoteExchangeCooldown(const std::string & n, const BT::NodeConfig & c)
     : ConditionNode(n, c)
 {
@@ -159,23 +130,42 @@ CheckRemoteExchangeCooldown::CheckRemoteExchangeCooldown(const std::string & n, 
 BT::PortsList CheckRemoteExchangeCooldown::providedPorts()
 {
     return {
-        BT::InputPort<int>("max_count", 3, ""),
-        BT::InputPort<std::string>("count_key", "remote_ammo_exchange_count", ""),
-        BT::InputPort<std::string>("exchange_count_key", "remote_ammo_exchange_count", ""),
-        BT::InputPort<double>("cooldown_seconds", 0.0, ""),
+        BT::InputPort<int>("max_count", 3, "远程兑换总次数上限"),//这里的max_count根据实际情况更改
+        BT::InputPort<std::string>(
+            "exchange_count_key", "remote_ammo_exchange_count",
+            "要检查的计数器键：remote_ammo_exchange_count 或 remote_health_exchange_count"),
+        BT::InputPort<double>("cooldown_seconds", 0.0, "两次兑换之间的最小间隔（秒）"),
     };
 }
 BT::NodeStatus CheckRemoteExchangeCooldown::tick()
 {
     int max_count = 3;
     std::string key = BbKey::kRemoteAmmoExchangeCount;
+    double cooldown = 0.0;
     (void)getInput("max_count", max_count);
-    if (!getInput("exchange_count_key", key))
-        (void)getInput("count_key", key);
-    (void)getInput<double>("cooldown_seconds");
+    (void)getInput("exchange_count_key", key);
+    (void)getInput("cooldown_seconds", cooldown);
+
     int count = 0;
     (void)config().blackboard->get(key, count);
-    return count < max_count ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+
+    if (count >= max_count) {
+        return BT::NodeStatus::FAILURE;
+    }
+
+    const double now = nowSec();
+    // 次数发生变化说明上一次兑换请求已被下游接受，从这里重新计时。
+    // 用「观察计数变化」而不是「条件节点自身被 tick」来计时，
+    // 避免条件每 tick 成功一次就把冷却重置掉。
+    if (last_count_ >= 0 && count != last_count_) {
+        last_change_sec_ = now;
+    }
+    last_count_ = count;
+
+    if (last_change_sec_ > 0.0 && (now - last_change_sec_) < cooldown) {
+        return BT::NodeStatus::FAILURE;
+    }
+    return BT::NodeStatus::SUCCESS;
 }
 
 CheckRemainingAmmoExchange::CheckRemainingAmmoExchange(const std::string & n, const BT::NodeConfig & c)
