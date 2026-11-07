@@ -1,0 +1,7 @@
+.vscode/
+build/
+install/
+log/
+node_modules/
+package-lock.json
+package.json

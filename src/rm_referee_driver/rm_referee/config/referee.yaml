@@ -1,0 +1,9 @@
+referee_node:
+  ros__parameters:
+    port: /dev/ttyUSB0
+    baudrate: 115200
+    read_timeout_ms: 50
+    reconnect_interval_ms: 1000
+    max_payload_size: 118
+    publish_raw: false
+    frame_id: referee

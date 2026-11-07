@@ -1,0 +1,10 @@
+std_msgs/Header header
+uint8 double_vulnerability_chances
+bool enemy_double_vulnerable
+uint8 encryption_level
+bool can_change_key
+bool armor_fortification_active
+uint8 armor_fortification_chances
+uint16 fortify_center_x
+uint16 fortify_center_y
+uint16 fortify_radius

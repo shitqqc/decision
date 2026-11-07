@@ -1,0 +1,5 @@
+std_msgs/Header header
+uint16 projectile_allowance_17mm
+uint16 projectile_allowance_42mm
+uint16 remaining_gold_coin
+uint16 projectile_allowance_fortress

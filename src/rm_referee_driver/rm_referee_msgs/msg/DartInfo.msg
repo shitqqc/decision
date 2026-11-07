@@ -1,0 +1,5 @@
+std_msgs/Header header
+uint8 remaining_time
+uint8 recent_hit_target
+uint8 enemy_hit_count
+uint8 selected_target
