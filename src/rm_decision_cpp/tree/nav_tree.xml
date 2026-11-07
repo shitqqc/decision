@@ -86,7 +86,7 @@
                     <CheckGameTimeWindow name="CheckPatrolNormalWindow"
                                          min_remaining="360"
                                          max_remaining="420"
-                                         require_game_started="false" />
+                                         require_game_started="true" />
                     <SelectPatrolPoint name="SelectPatrolPoint" patrol_branch="3" />
                     <NavigateToPoseAction name="NavigatePatrolPoint" />
                     <Wait name="WaitAtPatrolPoint" />
@@ -95,7 +95,7 @@
                     <CheckGameTimeWindow name="CheckPatrolAttackWindow"
                                          min_remaining="0"
                                          max_remaining="360"
-                                         require_game_started="false" />
+                                         require_game_started="true" />
                     <SelectPatrolPoint name="SelectPatrolPoint" patrol_branch="3" />
                     <NavigateToPoseAction name="NavigatePatrolPoint" />
                     <Wait name="WaitAtPatrolPoint" />
@@ -129,7 +129,7 @@
           <CheckGameTimeWindow name="CheckAutoOutpostAttackWindow"
                                min_remaining="0"
                                max_remaining="420"
-                               require_game_started="false" />
+                               require_game_started="true" />
           <CheckOutpostAttackState name="CheckAutoOutpostAttackActive"
                                    state="auto_attack" />
           <CheckTacticalModeCondition name="CheckAutoOutpostStrategyNormalMode"
@@ -151,7 +151,7 @@
           <CheckGameTimeWindow name="CheckMidSupplyWindow"
                                min_remaining="150"
                                max_remaining="180"
-                               require_game_started="false" />
+                               require_game_started="true" />
           <ReactiveFallback name="MidSupplySelector">
             <ReactiveSequence name="MidHealthSupply">
               <CheckRetreatCondition name="CheckMidHealthSupplyCondition"
@@ -215,7 +215,7 @@
               <CheckGameTimeWindow name="CheckEarlyGameSpecialWindow"
                                    min_remaining="0"
                                    max_remaining="420"
-                                   require_game_started="false" />
+                                   require_game_started="true" />
               <ReactiveFallback name="EarlyGameSpecialSelector">
                 <ReactiveSequence name="AutoNormalOutpostResponse">
                   <CheckTacticalModeCondition name="CheckAutoOutpostNormalMode" mode="normal" />
@@ -244,7 +244,7 @@
               <CheckGameTimeWindow name="CheckPatrolNormalWindow"
                                    min_remaining="301"
                                    max_remaining="390"
-                                   require_game_started="false" />
+                                   require_game_started="true" />
               <!-- <SelectPatrolPoint name="SelectPatrolPoint" patrol_branch_defensive="0"
                                                           patrol_branch_balanced="0"
                                                           patrol_branch_offensive="0"/> -->
@@ -256,7 +256,7 @@
               <CheckGameTimeWindow name="CheckPatrolAttackWindow"
                                    min_remaining="0"
                                    max_remaining="300"
-                                   require_game_started="false" />
+                                   require_game_started="true" />
               <!-- <SelectPatrolPoint name="SelectPatrolPoint" patrol_branch_defensive="0"
                                                           patrol_branch_balanced="0"
                                                           patrol_branch_offensive="0"/> -->

@@ -9,13 +9,12 @@
 namespace rm_decision
 {
 
-// class CheckTargetVisible : public BT::ConditionNode
-// {
-// public:
-//   CheckTargetVisible(const std::string & _name, const BT::NodeConfig & _config);
-//   static BT::PortsList providedPorts() { return {}; }
-//   BT::NodeStatus tick() override;
-// };
+class CheckTargetVisible : public BT::ConditionNode {
+public:
+    CheckTargetVisible(const std::string & _name, const BT::NodeConfig & _config);
+    static BT::PortsList providedPorts() { return {}; }
+    BT::NodeStatus tick() override;
+};
 
 // class CheckNearEnemyOutpost : public BT::ConditionNode
 // {

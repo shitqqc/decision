@@ -20,7 +20,7 @@ public:
   /// Like bit SentryBTManager::initialize: registerNodes then loadTrees.
   bool initialize(
     const std::string & _tree_dir, const BT::Blackboard::Ptr & _blackboard, const ZoneMap * _zones,
-    rclcpp::Node::SharedPtr _node);
+    rclcpp::Node::SharedPtr _node, const std::string & _match_type = "rmuc");
 
   /// Tick order: resource → tactical → nav → stance → gimbal
   void tickOnce();
@@ -34,18 +34,19 @@ public:
   const BT::Tree & gimbalTree() const { return gimbal_tree_; }
   const BT::Tree & ulTree() const { return ul_tree_; }
 
-  const BtStatusLatch & resourceLatch() const { return *resource_latch_; }
-  const BtStatusLatch & tacticalLatch() const { return *tactical_latch_; }
-  const BtStatusLatch & navLatch() const { return *nav_latch_; }
-  const BtStatusLatch & stanceLatch() const { return *stance_latch_; }
-  const BtStatusLatch & gimbalLatch() const { return *gimbal_latch_; }
-  const BtStatusLatch & ulLatch() const { return *ul_latch_; }
+  const BtStatusLatch * resourceLatch() const { return resource_latch_.get(); }
+  const BtStatusLatch * tacticalLatch() const { return tactical_latch_.get(); }
+  const BtStatusLatch * navLatch() const { return nav_latch_.get(); }
+  const BtStatusLatch * stanceLatch() const { return stance_latch_.get(); }
+  const BtStatusLatch * gimbalLatch() const { return gimbal_latch_.get(); }
+  const BtStatusLatch * ulLatch() const { return ul_latch_.get(); }
 
 private:
   void registerNodes_(const ZoneMap * _zones, rclcpp::Node::SharedPtr _node);
   bool loadTrees_(const std::string & _tree_dir, const BT::Blackboard::Ptr & _blackboard);
 
   BT::BehaviorTreeFactory factory_;
+  std::string match_type_{"rmuc"};
   BT::Tree resource_tree_;
   BT::Tree tactical_tree_;
   BT::Tree nav_tree_;

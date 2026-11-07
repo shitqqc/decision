@@ -52,15 +52,9 @@ BT::NodeStatus CheckGameTimeWindow::tick()
     std::uint8_t p = 0;
     (void)config().blackboard->get(BbKey::kGameTimeRemaining, t);
     (void)config().blackboard->get(BbKey::kGameProgress, p);
-    // TODO: require_game_started=false 时本节点完全不看 game_progress，只比较时间窗。
-    // 赛前 game_time_remaining 为 0，只要 [min_remaining, max_remaining] 覆盖 0 就返回 SUCCESS。
-    // tree/ul_tree.xml 现在正是这么配的（min_remaining=0 + require_game_started=false），
-    // 结果本树在【赛前】就命中，车会提前开去 HOME。
-    // 若要表达「比赛中」，调用方应传 true；若确实想保留 false，这里还应额外要求
-    // game_progress != 0（赛前），避免把 0 秒误当成合法的比赛时间。
+
     if (require && p != 4u)
         return BT::NodeStatus::FAILURE;
-
     return (t >= min_r && t <= max_r) ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 }
 

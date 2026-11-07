@@ -11,7 +11,8 @@
                                   active_status="1" />
             <CheckGameTimeWindow name="CheckAutoAttackFortWindow"
                                  min_remaining="0"
-                                 max_remaining="120" />
+                                 max_remaining="120" 
+                                 require_game_started="true" />
           </Sequence>
         </ReactiveFallback>
         <SetTacticalMode name="SetAttackMode" mode="attack" />

@@ -17,6 +17,8 @@ find_package(behaviortree_cpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 include_directories(include)
@@ -33,9 +35,12 @@ set(ros_dependencies
   std_msgs
   action_msgs
   tf2
+  tf2_ros
+  tf2_geometry_msgs
 )
 
 set(DECISION_SOURCES
+  src/infrastructure/auto_aim_ingress.cpp
   src/infrastructure/game_info_referee_ingress.cpp
   src/infrastructure/odom_pose_ingress.cpp
   src/infrastructure/through_tunnel_ingress.cpp

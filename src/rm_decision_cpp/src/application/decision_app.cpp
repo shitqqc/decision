@@ -2,6 +2,7 @@
 
 #include "rm_decision/domain/blackboard_keys.hpp"
 #include "rm_decision/domain/zone_loader.hpp"
+#include "rm_decision/infrastructure/auto_aim_ingress.hpp"
 #include "rm_decision/infrastructure/bt_snapshot_publisher.hpp"
 #include "rm_decision/infrastructure/game_info_referee_ingress.hpp"
 // #include "rm_decision/infrastructure/odom_pose_ingress.hpp"
@@ -110,6 +111,10 @@ bool DecisionApp::start()
     const std::string game_info_topic = resolveTopic(*node_, "game_info_topic", "game_info");
     referee_ = std::make_unique<GameInfoRefereeIngress>(*node_, game_info_topic);
 
+    const std::string tracker_target_topic =
+        resolveTopic(*node_, "tracker_target_topic", "/tracker/target");
+    auto_aim_ = std::make_unique<AutoAimIngress>(*node_, tracker_target_topic);
+
     // const std::string odom_topic = node_->get_parameter_or<std::string>("odom_topic", "/odom");
     // pose_ = std::make_unique<OdomPoseIngress>(*node_, odom_topic);
 
@@ -121,9 +126,10 @@ bool DecisionApp::start()
     const std::string spin_topic =
         node_->get_parameter_or<std::string>("use_spin_topic", "/nav/use_spin");
     const std::string energy_aim_topic = resolveTopic(*node_, "energy_aim_topic", "energy_aim_mode");
-    // TODO: SetGimbalPose 用 "gimbal_pose_topic" 参数（默认 /nav/gimbal_pose）自建 publisher。
-    // 等云台输出并入 SentryCmdEgress 后，在这里按上面两个话题的方式解析该参数，并作为第 5 个构造参数传进去。
-    command_ = std::make_unique<SentryCmdEgress>(*node_, cmd_topic, spin_topic, energy_aim_topic);
+    const std::string gimbal_pose_topic =
+        resolveTopic(*node_, "gimbal_pose_topic", "/nav/gimbal_pose");
+    command_ = std::make_unique<SentryCmdEgress>(
+        *node_, cmd_topic, spin_topic, energy_aim_topic, gimbal_pose_topic);
 
     // TODO: 自瞄追击（见 gimbal_action.cpp 的 TrackTargetAction）需要先把自瞄结果送进 blackboard。
     // 职责边界：决策不做自瞄、也不转发云台角。自瞄自己闭环云台；决策只在追击时用
@@ -156,7 +162,8 @@ bool DecisionApp::start()
         return false;
     }
 
-    if (!engine_.initialize(tree_dir, blackboard_, &zones_, node_)) {
+    const std::string match_type = node_->get_parameter_or<std::string>("match_type", "rmuc");
+    if (!engine_.initialize(tree_dir, blackboard_, &zones_, node_, match_type)) {
         return false;
     }
 
@@ -168,8 +175,8 @@ bool DecisionApp::start()
 
     tick_period_ms_ = node_->get_parameter_or<int>("tick_period_milliseconds", 100);
     RCLCPP_INFO(
-        node_->get_logger(), "DecisionApp started: bit P0, monitor=%s",
-        enable_bt_monitor_ ? "on" : "off");
+        node_->get_logger(), "DecisionApp started: bit P0, match_type=%s, monitor=%s",
+        match_type.c_str(), enable_bt_monitor_ ? "on" : "off");
     return true;
 }
 
@@ -179,6 +186,7 @@ void DecisionApp::spinLoop()
     while (rclcpp::ok()) {
         rclcpp::spin_some(node_);
         referee_->update(*blackboard_);
+        auto_aim_->update(*blackboard_);
         // pose_->update(*blackboard_);
         tunnel_->update(*blackboard_);
         // updateZoneFlags(zones_, *blackboard_);

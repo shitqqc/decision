@@ -12,6 +12,11 @@
       <SetEnergyAim aim_mode="2" hold_sec="15" include_active="true" />
 
       <ReactiveFallback name="GimbalPriorityRoot">
+        <!-- <ReactiveSequence name="Priority0AutoAim">
+          <CheckTargetVisible name="CheckGimbalTargetVisible" />
+          <SetGimbalPose name="ReleaseGimbalAutoAim" enable="false" />
+        </ReactiveSequence> -->
+
         <ReactiveSequence name="Priority1SpecialResponseScan">
           <CheckOutpostTarget name="CheckGimbalOutpostTarget"
                               goal_distance_threshold="0.5" />

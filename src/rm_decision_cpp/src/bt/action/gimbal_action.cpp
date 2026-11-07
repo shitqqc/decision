@@ -1,7 +1,12 @@
 #include "rm_decision/bt/action/gimbal_action.hpp"
+#include "rm_decision/bt/bt_utils.hpp"
 #include "rm_decision/domain/blackboard_keys.hpp"
 
+#include <tf2/exceptions.hpp>
+
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <utility>
 
@@ -16,18 +21,23 @@ double nowSec()
 }
 } // namespace
 
-TrackTargetAction::TrackTargetAction(const std::string & n, const BT::NodeConfig & c)
-    : StatefulActionNode(n, c)
+TrackTargetAction::TrackTargetAction(
+    const std::string & n, const BT::NodeConfig & c, rclcpp::Node::SharedPtr node)
+    : StatefulActionNode(n, c), node_(std::move(node)), tf_buffer_(node_->get_clock()),
+      tf_listener_(tf_buffer_, node_, false)
 {
+}
+BT::PortsList TrackTargetAction::providedPorts()
+{
+    return {BT::InputPort<double>("standoff", 0.0, ""),
+            BT::InputPort<double>("keep_dist", 0.0, "")};
 }
 BT::NodeStatus TrackTargetAction::onStart()
 {
-    bool v = false;
-    (void)config().blackboard->get(BbKey::kTargetValid, v);
     // TODO: 自瞄追击链路。
     // 云台在追击期间由自瞄自己闭环，决策只在观测时用 SetGimbalPose 发固定角度。
     // 本节点把自瞄给的目标位置换算成 map 系航点，交给导航去追击。
-    // 订阅 /tracker/target（rm_interfaces/msg/Target，SensorData QoS）：
+    // 订阅 /tracker/target（decision_interfaces/msg/Target，SensorData QoS）：
     //   header.frame_id = "odom"（rm_tracker 的 target_frame 参数）
     //   tracking       bool      是否有目标
     //   position       Point     目标中心，【odom 系】，单位 m  ← 直接可用
@@ -55,22 +65,54 @@ BT::NodeStatus TrackTargetAction::onStart()
     //
     // 注意：本节点不写 kGimbalYawCmd / kGimbalPitchCmd / kGimbalEnabled；
     // 追击时云台归自瞄，若同时写会两边抢控制权导致云台抖动。
-    return v ? BT::NodeStatus::RUNNING : BT::NodeStatus::FAILURE;
+    return updateGoal_();
 }
 BT::NodeStatus TrackTargetAction::onRunning()
 {
-    bool v = false;
-    (void)config().blackboard->get(BbKey::kTargetValid, v);
-    return v ? BT::NodeStatus::RUNNING : BT::NodeStatus::FAILURE;
+    return updateGoal_();
+}
+void TrackTargetAction::onHalted()
+{
+    config().blackboard->set(BbKey::kNavGoalValid, false);
+}
+BT::NodeStatus TrackTargetAction::updateGoal_()
+{
+    (void)config().blackboard->set(BbKey::kNavGoalValid, false);
+    
+    bool target_valid = false;
+    double target_x = 0.0, target_y = 0.0, distance = 0.0;
+    (void)config().blackboard->get(BbKey::kTargetValid, target_valid);
+    (void)config().blackboard->get(BbKey::kTargetPoseX, target_x);
+    (void)config().blackboard->get(BbKey::kTargetPoseY, target_y);
+    (void)config().blackboard->get(BbKey::kTargetDistance, distance);
+    double standoff = 0.0, keep_dist = 0.0;
+    (void)getInput("standoff", standoff);
+    (void)getInput("keep_dist", keep_dist);
+    if (distance <= keep_dist) {
+        return BT::NodeStatus::RUNNING;
+    }
+
+    geometry_msgs::msg::TransformStamped transform;
+    try {
+        transform = tf_buffer_.lookupTransform("map", "base_link", tf2::TimePointZero);
+    } catch (const tf2::TransformException &) {
+        return BT::NodeStatus::FAILURE;
+    }
+    double current_x = transform.transform.translation.x;
+    double current_y = transform.transform.translation.y;
+    double dx = target_x - current_x;
+    double dy = target_y - current_y;
+    double scale = std::max(0.0, distance - standoff) / distance;
+    double goal_x = current_x + scale * dx;
+    double goal_y = current_y + scale * dy;
+    (void)config().blackboard->set(BbKey::kNavGoal, poseFromXyYaw(goal_x, goal_y, std::atan2(dy, dx)));
+    (void)config().blackboard->set(BbKey::kNavGoalValid, true);
+    return BT::NodeStatus::RUNNING;
 }
 
-SetGimbalPose::SetGimbalPose(const std::string & n, const BT::NodeConfig & c, rclcpp::Node::SharedPtr node)
-    : SyncActionNode(n, c), node_(std::move(node))
+SetGimbalPose::SetGimbalPose(const std::string & n, const BT::NodeConfig & c)
+    : SyncActionNode(n, c)
 {
-    const std::string topic =
-        node_->get_parameter_or<std::string>("gimbal_pose_topic", "/nav/gimbal_pose");
-    gimbal_pose_pub_ =
-        node_->create_publisher<decision_interfaces::msg::GimbalPose>(topic, rclcpp::QoS(10));
 }
 BT::PortsList SetGimbalPose::providedPorts()
 {
@@ -90,16 +132,6 @@ BT::NodeStatus SetGimbalPose::tick()
     config().blackboard->set(BbKey::kGimbalYawCmd, yaw);
     config().blackboard->set(BbKey::kGimbalPitchCmd, pitch);
     config().blackboard->set(BbKey::kGimbalEnabled, enable);
-    // TODO: 云台输出这里只写 blackboard，发布动作应交给 SentryCmdEgress。
-    // 现在直接 publish，导致输出通道分裂（ICommandEgress 之外的唯一例外），
-    // 也让 TrackTargetAction 将来自瞄接管云台时无法统一出口。
-    // SentryCmdEgress 增加 gimbal_pose_pub_（见对应的 TODO）；
-    // 删掉本节点里的 gimbal_pose_pub_ 与 create_publisher，节点只保留上面的 set()；
-    decision_interfaces::msg::GimbalPose msg;
-    msg.enable = enable;
-    msg.yaw = yaw;
-    msg.pitch = pitch;
-    gimbal_pose_pub_->publish(msg);
     return BT::NodeStatus::SUCCESS;
 }
 
@@ -109,7 +141,8 @@ SetEnergyAim::SetEnergyAim(const std::string & n, const BT::NodeConfig & c) : Sy
 BT::PortsList SetEnergyAim::providedPorts()
 {
     return {
-        BT::InputPort<int>("aim_mode", 2, ""), BT::InputPort<double>("hold_sec", 15.0, ""),
+        BT::InputPort<int>("aim_mode", 2, ""), 
+        BT::InputPort<double>("hold_sec", 15.0, ""),
         BT::InputPort<bool>("include_active", false, "")};
 }
 BT::NodeStatus SetEnergyAim::tick()

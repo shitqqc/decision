@@ -59,6 +59,7 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<CheckEngagedStatus>("CheckEngagedStatus");
   factory.registerNodeType<CheckEngagedStatus>("CheckEngaged");
   factory.registerNodeType<CheckOutpostTarget>("CheckOutpostTarget");
+  factory.registerNodeType<CheckTargetVisible>("CheckTargetVisible");
   factory.registerNodeType<CheckOutpostLowHealthDefend>("CheckOutpostLowHealthDefend");
   factory.registerNodeType<CheckEnemyAreaRecentlyHurt>("CheckEnemyAreaRecentlyHurt");
   factory.registerNodeType<CheckCapacitorCapacity>("CheckCapacitorCapacity");
@@ -94,8 +95,8 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
   factory.registerNodeType<UpdateStanceDuration>("UpdateStanceDuration");
   factory.registerNodeType<ApplyManualStanceOverride>("ApplyManualStanceOverride");
 
-  factory.registerNodeType<TrackTargetAction>("TrackTargetAction");
-  factory.registerNodeType<SetGimbalPose>("SetGimbalPose", node);
+  factory.registerNodeType<TrackTargetAction>("TrackTargetAction", node);
+  factory.registerNodeType<SetGimbalPose>("SetGimbalPose");
   factory.registerNodeType<SetEnergyAim>("SetEnergyAim");
 }
 
@@ -103,24 +104,23 @@ void BtEngine::registerNodes_(const ZoneMap * zones, rclcpp::Node::SharedPtr nod
 
 bool BtEngine::loadTrees_(const std::string & _tree_dir, const BT::Blackboard::Ptr & _blackboard)
 {
-  // TODO: ul和uc的树应该是
-  //   match_type = rmuc -> resource / tactical / nav / stance / gimbal 五棵树
-  //   match_type = rmul -> 只跑 ul_tree，其余五棵完全不 tick
-  // 加 match_type 参数（见 config/node_params.yaml 的 TODO），按值只注册和只创建
   try {
+    if (match_type_ == "rmul") {
+      factory_.registerBehaviorTreeFromFile(_tree_dir + "/ul_tree.xml");
+      ul_tree_ = factory_.createTree("ULTree", _blackboard);
+      return true;
+    }
     factory_.registerBehaviorTreeFromFile(_tree_dir + "/resource_tree.xml");
     factory_.registerBehaviorTreeFromFile(_tree_dir + "/tactical_tree.xml");
     factory_.registerBehaviorTreeFromFile(_tree_dir + "/nav_tree.xml");
     factory_.registerBehaviorTreeFromFile(_tree_dir + "/stance_tree.xml");
     factory_.registerBehaviorTreeFromFile(_tree_dir + "/gimbal_tree.xml");
-    factory_.registerBehaviorTreeFromFile(_tree_dir + "/ul_tree.xml");
 
     resource_tree_ = factory_.createTree("ResourceTree", _blackboard);
     tactical_tree_ = factory_.createTree("TacticalTree", _blackboard);
     nav_tree_ = factory_.createTree("MainTree", _blackboard);
     stance_tree_ = factory_.createTree("StanceTree", _blackboard);
     gimbal_tree_ = factory_.createTree("GimbalTree", _blackboard);
-    ul_tree_ = factory_.createTree("ULTree", _blackboard);
   } catch (const std::exception & ex) {
     throw std::runtime_error(std::string("BtEngine loadTrees failed: ") + ex.what());
   }
@@ -129,23 +129,35 @@ bool BtEngine::loadTrees_(const std::string & _tree_dir, const BT::Blackboard::P
 
 bool BtEngine::initialize(
   const std::string & _tree_dir, const BT::Blackboard::Ptr & _blackboard, const ZoneMap * _zones,
-  rclcpp::Node::SharedPtr _node)
+  rclcpp::Node::SharedPtr _node, const std::string & _match_type)
 {
+  if (_match_type != "rmuc" && _match_type != "rmul") {
+    return false;
+  }
+  match_type_ = _match_type;
   registerNodes_(_zones, std::move(_node));
   if (!loadTrees_(_tree_dir, _blackboard)) {
     return false;
+  }
+  if (match_type_ == "rmul") {
+    ul_latch_ = std::make_unique<BtStatusLatch>(ul_tree_.rootNode());
+    return true;
   }
   resource_latch_ = std::make_unique<BtStatusLatch>(resource_tree_.rootNode());
   tactical_latch_ = std::make_unique<BtStatusLatch>(tactical_tree_.rootNode());
   nav_latch_ = std::make_unique<BtStatusLatch>(nav_tree_.rootNode());
   stance_latch_ = std::make_unique<BtStatusLatch>(stance_tree_.rootNode());
   gimbal_latch_ = std::make_unique<BtStatusLatch>(gimbal_tree_.rootNode());
-  ul_latch_ = std::make_unique<BtStatusLatch>(ul_tree_.rootNode());
   return true;
 }
 
 void BtEngine::tickOnce()
 {
+  if (match_type_ == "rmul") {
+    ul_latch_->beginTick();
+    ul_tree_.tickOnce();
+    return;
+  }
   resource_latch_->beginTick();
   resource_tree_.tickOnce();
   tactical_latch_->beginTick();
@@ -156,8 +168,6 @@ void BtEngine::tickOnce()
   stance_tree_.tickOnce();
   gimbal_latch_->beginTick();
   gimbal_tree_.tickOnce();
-  ul_latch_->beginTick();
-  ul_tree_.tickOnce();
 }
 
 }  // namespace rm_decision

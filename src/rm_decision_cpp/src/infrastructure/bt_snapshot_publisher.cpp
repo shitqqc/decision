@@ -141,12 +141,12 @@ BtSnapshotPublisher::BtSnapshotPublisher(rclcpp::Node & _node, const std::string
 
 
 void BtSnapshotPublisher::publish(
-  const BT::Tree & _resource, const BtStatusLatch & _resource_latch, 
-  const BT::Tree & _tactical, const BtStatusLatch & _tactical_latch,
-  const BT::Tree & _nav, const BtStatusLatch & _nav_latch,
-  const BT::Tree & _stance, const BtStatusLatch & _stance_latch, 
-  const BT::Tree & _gimbal,const BtStatusLatch & _gimbal_latch, 
-  const BT::Tree & _ul, const BtStatusLatch & _ul_latch, 
+  const BT::Tree & _resource, const BtStatusLatch * _resource_latch,
+  const BT::Tree & _tactical, const BtStatusLatch * _tactical_latch,
+  const BT::Tree & _nav, const BtStatusLatch * _nav_latch,
+  const BT::Tree & _stance, const BtStatusLatch * _stance_latch,
+  const BT::Tree & _gimbal, const BtStatusLatch * _gimbal_latch,
+  const BT::Tree & _ul, const BtStatusLatch * _ul_latch,
   BT::Blackboard & _bb)
 {
   const auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -155,12 +155,25 @@ void BtSnapshotPublisher::publish(
 
   nlohmann::json root;
   root["stamp_ms"] = now_ms;
-  root["trees"]["resource"] = serializeTree(_resource, _resource_latch);
-  root["trees"]["tactical"] = serializeTree(_tactical, _tactical_latch);
-  root["trees"]["nav"] = serializeTree(_nav, _nav_latch);
-  root["trees"]["stance"] = serializeTree(_stance, _stance_latch);
-  root["trees"]["gimbal"] = serializeTree(_gimbal, _gimbal_latch);
-  root["trees"]["ul"] = serializeTree(_ul, _ul_latch);
+  root["trees"] = nlohmann::json::object();
+  if (_resource_latch) {
+    root["trees"]["resource"] = serializeTree(_resource, *_resource_latch);
+  }
+  if (_tactical_latch) {
+    root["trees"]["tactical"] = serializeTree(_tactical, *_tactical_latch);
+  }
+  if (_nav_latch) {
+    root["trees"]["nav"] = serializeTree(_nav, *_nav_latch);
+  }
+  if (_stance_latch) {
+    root["trees"]["stance"] = serializeTree(_stance, *_stance_latch);
+  }
+  if (_gimbal_latch) {
+    root["trees"]["gimbal"] = serializeTree(_gimbal, *_gimbal_latch);
+  }
+  if (_ul_latch) {
+    root["trees"]["ul"] = serializeTree(_ul, *_ul_latch);
+  }
   root["blackboard"] = serializeBlackboard(_bb);
 
   std_msgs::msg::String msg;

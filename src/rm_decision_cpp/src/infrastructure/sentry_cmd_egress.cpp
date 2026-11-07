@@ -10,7 +10,8 @@ namespace rm_decision
 
 SentryCmdEgress::SentryCmdEgress(
     rclcpp::Node & _node, const std::string & _sentry_cmd_topic,
-    const std::string & _use_spin_topic, const std::string & _energy_aim_topic)
+    const std::string & _use_spin_topic, const std::string & _energy_aim_topic,
+    const std::string & _gimbal_pose_topic)
     : node_(_node)
 {
     sentry_pub_ = node_.create_publisher<decision_interfaces::msg::SentryCmd>(
@@ -18,14 +19,13 @@ SentryCmdEgress::SentryCmdEgress(
     spin_pub_ = node_.create_publisher<std_msgs::msg::Bool>(_use_spin_topic, rclcpp::QoS(10));
     energy_aim_pub_ =
         node_.create_publisher<std_msgs::msg::UInt8>(_energy_aim_topic, rclcpp::QoS(10));
-    // TODO: 新增 _gimbal_pose_topic 参数后，参考上面几个 publisher 在这里创建
-    // gimbal_pose_pub_：
-    //   gimbal_pose_pub_ = node_.create_publisher<decision_interfaces::msg::GimbalPose>(
-    //       _gimbal_pose_topic, rclcpp::QoS(10));
-    // 并把话题名补进下面的 RCLCPP_INFO，方便启动时确认接线。
+    gimbal_pose_pub_ = node_.create_publisher<decision_interfaces::msg::GimbalPose>(
+        _gimbal_pose_topic, rclcpp::QoS(10));
     RCLCPP_INFO(
-        node_.get_logger(), "SentryCmdEgress: blackboard-driven cmd=%s spin=%s energy_aim=%s",
-        _sentry_cmd_topic.c_str(), _use_spin_topic.c_str(), _energy_aim_topic.c_str());
+        node_.get_logger(),
+        "SentryCmdEgress: blackboard-driven cmd=%s spin=%s energy_aim=%s gimbal_pose=%s",
+        _sentry_cmd_topic.c_str(), _use_spin_topic.c_str(), _energy_aim_topic.c_str(),
+        _gimbal_pose_topic.c_str());
 }
 
 
@@ -81,23 +81,20 @@ void SentryCmdEgress::publish(const BT::Blackboard & _bb)
     energy_aim_msg.data = energy_aim;
     energy_aim_pub_->publish(energy_aim_msg);
 
-    // TODO: 把云台姿态发给导航（/nav/gimbal_pose，类型 decision_interfaces/msg/GimbalPose）。
-    // 接口就用 GimbalPose，enable 字段是启用/关闭云台控制的开关，
-    // 不是控制模式枚举，也不用 rmoss_interfaces/GimbalCmd。
-    // 注意该消息目前全仓库没有任何订阅方，导航侧需要自己实现接收端，否则发出去没人接。
-    // 云台子树已经把决策结果写进 blackboard，这里只差最后一步发布：
-    //   float gimbal_yaw = 0.f, gimbal_pitch = 0.f;
-    //   bool gimbal_enabled = false;
-    //   (void)_bb.get(BbKey::kGimbalYawCmd, gimbal_yaw);
-    //   (void)_bb.get(BbKey::kGimbalPitchCmd, gimbal_pitch);
-    //   (void)_bb.get(BbKey::kGimbalEnabled, gimbal_enabled);   // 开关，语义见 gimbal_tree.xml
-    //   decision_interfaces::msg::GimbalPose gimbal_msg;
-    //   gimbal_msg.enable = gimbal_enabled;
-    //   gimbal_msg.yaw = gimbal_yaw;
-    //   gimbal_msg.pitch = gimbal_pitch;
-    //   gimbal_pose_pub_->publish(gimbal_msg);
-    //   enable=false 时建议只发一次，避免导航侧反复收到「关闭」而反复重置云台；
-    //   enable=true 时才每 tick 重发。
+    float gimbal_yaw = 0.f, gimbal_pitch = 0.f;
+    bool gimbal_enabled = false;
+    (void)_bb.get(BbKey::kGimbalYawCmd, gimbal_yaw);
+    (void)_bb.get(BbKey::kGimbalPitchCmd, gimbal_pitch);
+    (void)_bb.get(BbKey::kGimbalEnabled, gimbal_enabled);
+    if (gimbal_enabled || !gimbal_published_ || last_gimbal_enabled_) {
+        decision_interfaces::msg::GimbalPose gimbal_msg;
+        gimbal_msg.enable = gimbal_enabled;
+        gimbal_msg.yaw = gimbal_yaw;
+        gimbal_msg.pitch = gimbal_pitch;
+        gimbal_pose_pub_->publish(gimbal_msg);
+        gimbal_published_ = true;
+        last_gimbal_enabled_ = gimbal_enabled;
+    }
 }
 
 } // namespace rm_decision
